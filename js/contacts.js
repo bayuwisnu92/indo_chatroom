@@ -81,7 +81,7 @@ function loadProtectedContent(userData) {
           if(response.status === 200){
             showAlert('Logout berhasil!', 'success');
             localStorage.removeItem('token');
-            window.location.href = '/views/login.html';
+            window.location.href = 'login.html';
           }
         } catch (error) {
           console.error('Logout error:', error);
@@ -110,7 +110,7 @@ async function logoutOnline(){
     });
     if(response.status === 200){
       showAlert('Logout berhasil!', 'success');
-      window.location.href = '/views/login.html';
+      window.location.href = 'login.html';
     }
   } catch (error) {
     console.error('Logout error:', error);
@@ -135,7 +135,7 @@ async function loadAllChatList() {
       localStorage.removeItem('token');
       logoutOnline();
       setTimeout(() => {
-        window.location.href = '/views/login.html';
+        window.location.href = 'login.html';
       }, 1500);
       return;
     }

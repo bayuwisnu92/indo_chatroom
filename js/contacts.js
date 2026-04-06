@@ -31,7 +31,7 @@ if (!token) {
 // Fungsi verifikasi token
 async function verifyToken(token) {
   try {
-    const response = await fetch('https://chair-manufacturer-electric-von.trycloudflare.com/api/verify-token', {
+    const response = await fetch('https://full-nurse-fellow-halo.trycloudflare.com/api/verify-token', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -71,7 +71,7 @@ function loadProtectedContent(userData) {
     
       document.getElementById('logout').addEventListener('click', async () => {
         try{
-          const response = await fetch('https://chair-manufacturer-electric-von.trycloudflare.com/api/logout', {
+          const response = await fetch('https://full-nurse-fellow-halo.trycloudflare.com/api/logout', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -101,7 +101,7 @@ function loadProtectedContent(userData) {
 
 async function logoutOnline(){
   try{
-    const response = await fetch('https://chair-manufacturer-electric-von.trycloudflare.com/api/logout', {
+    const response = await fetch('https://full-nurse-fellow-halo.trycloudflare.com/api/logout', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -122,10 +122,10 @@ async function logoutOnline(){
 async function loadAllChatList() {
   try {
     const [contactRes, groupRes] = await Promise.all([
-      fetch('https://chair-manufacturer-electric-von.trycloudflare.com/api/contacts', {
+      fetch('https://full-nurse-fellow-halo.trycloudflare.com/api/contacts', {
         headers: { 'Authorization': `Bearer ${token}` }
       }),
-      fetch('https://chair-manufacturer-electric-von.trycloudflare.com/api/allGroup', {
+      fetch('https://full-nurse-fellow-halo.trycloudflare.com/api/allGroup', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
     ]);
@@ -223,7 +223,7 @@ async function startChat(datanya) {
       throw new Error('ID kontak tidak valid');
     }
 
-    const response = await fetch('https://chair-manufacturer-electric-von.trycloudflare.com/api/conversations/start', {
+    const response = await fetch('https://full-nurse-fellow-halo.trycloudflare.com/api/conversations/start', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -277,7 +277,7 @@ pencarian.addEventListener("input", function () {
 
     try {
 
-      const res = await fetch(`https://chair-manufacturer-electric-von.trycloudflare.com/api/users/search?q=${keyword}`, {
+      const res = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/users/search?q=${keyword}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -418,7 +418,7 @@ formGroup.addEventListener('submit', async (e) => {
       return;
     }
 
-    const response = await fetch('https://chair-manufacturer-electric-von.trycloudflare.com/api/newGroup', {
+    const response = await fetch('https://full-nurse-fellow-halo.trycloudflare.com/api/newGroup', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -481,7 +481,7 @@ const lawanChat =urlParams.get('username');
 
 const grupId = urlParams.get('grupId')
 
-const socket = io("https://chair-manufacturer-electric-von.trycloudflare.com", {
+const socket = io("https://full-nurse-fellow-halo.trycloudflare.com", {
   auth: {
     token: token
   }
@@ -592,7 +592,7 @@ async function sendMessage() {
 
     try {
 
-      const response = await fetch(`https://chair-manufacturer-electric-von.trycloudflare.com/api/${conversationId}/send`, {
+      const response = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/${conversationId}/send`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -716,7 +716,7 @@ function updateContactRealtime(message) {
     const lastMsgElem = contactElem.querySelector(".last-message");
     if (lastMsgElem) {
       // Logic deteksi gambar agar tidak muncul URL panjang
-      const isImage = message.content.includes('https://chair-manufacturer-electric-von.trycloudflare.com/uploads/');
+      const isImage = message.content.includes('https://full-nurse-fellow-halo.trycloudflare.com/uploads/');
       const textDisplay = isImage ? "📷 Gambar" : message.content;
       
       // Jika grup, tambahkan nama pengirim
@@ -776,7 +776,7 @@ async function loadMessages() {
 
   socket.emit("joinConversation", conversationId);
   try {
-    const response = await fetch(`https://chair-manufacturer-electric-von.trycloudflare.com/api/${conversationId}/messages`, {
+    const response = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/${conversationId}/messages`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -880,7 +880,7 @@ function renderContent(content) {
 
 async function loadMessagesGrup() {
   try {
-    const response = await fetch(`https://chair-manufacturer-electric-von.trycloudflare.com/api/grup/${grupId}/messages`, {
+    const response = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/grup/${grupId}/messages`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -953,7 +953,7 @@ async function deleteMessage(messageId) {
   if (!konfirmasi) return; // Kalau user batal, jangan lanjut
 
   try {
-    const response = await fetch(`https://chair-manufacturer-electric-von.trycloudflare.com/api/hapuspesan/${messageId}`, {
+    const response = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/hapuspesan/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -978,7 +978,7 @@ async function deleteMessageGrup(messageId) {
   if (!konfirmasi) return; // Kalau user batal, jangan lanjut
 
   try {
-    const response = await fetch(`https://chair-manufacturer-electric-von.trycloudflare.com/api/delete/grup/${messageId}`, {
+    const response = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/delete/grup/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -1000,7 +1000,7 @@ async function deleteMessageGrup(messageId) {
 async function editMessage(messageId) {
   try {
     // Ambil pesan lama
-    const resGet = await fetch(`https://chair-manufacturer-electric-von.trycloudflare.com/api/editpesan/${messageId}`, {
+    const resGet = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/editpesan/${messageId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -1016,7 +1016,7 @@ async function editMessage(messageId) {
     }
 
     // Kirim update ke server
-    const resUpdate = await fetch(`https://chair-manufacturer-electric-von.trycloudflare.com/api/updatepesan/${messageId}`, {
+    const resUpdate = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/updatepesan/${messageId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -1041,7 +1041,7 @@ async function editMessage(messageId) {
 async function editMessageGrup(messageId) {
   try {
     // Ambil pesan lama
-    const resGet = await fetch(`https://chair-manufacturer-electric-von.trycloudflare.com/api/editpesangrup/${messageId}`, {
+    const resGet = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/editpesangrup/${messageId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -1057,7 +1057,7 @@ async function editMessageGrup(messageId) {
     }
 
     // Kirim update ke server
-    const resUpdate = await fetch(`https://chair-manufacturer-electric-von.trycloudflare.com/api/updatepesangrup/${messageId}`, {
+    const resUpdate = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/updatepesangrup/${messageId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -1112,7 +1112,7 @@ async function sendMessageGrup() {
 }
 
   try {
-    const response = await fetch(`https://chair-manufacturer-electric-von.trycloudflare.com/api/grup/${grupId}/send`, {
+    const response = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/grup/${grupId}/send`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`

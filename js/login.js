@@ -9,7 +9,7 @@ form.addEventListener('submit', async (e) => {
         const email = form.querySelector('#email').value; // Ambil nilai email
         const password = form.querySelector('#password').value; // Ambil nilai password
 
-        const response = await fetch('https://full-nurse-fellow-halo.trycloudflare.com/auth/login', {
+        const response = await fetch('http://localhost:3000/auth/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json' // << PENTING!

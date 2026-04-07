@@ -2,6 +2,7 @@
 const token = localStorage.getItem('token');
 let currentUserId = null;
 let dataGlobal = []
+let currentGrupId = null; // Tambahkan ini di baris paling atas file
 
 if (!token) {
   window.location.href = 'login.html';
@@ -31,7 +32,7 @@ if (!token) {
 // Fungsi verifikasi token
 async function verifyToken(token) {
   try {
-    const response = await fetch('https://full-nurse-fellow-halo.trycloudflare.com/api/verify-token', {
+    const response = await fetch('http://localhost:3000/api/verify-token', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -71,7 +72,7 @@ function loadProtectedContent(userData) {
     
       document.getElementById('logout').addEventListener('click', async () => {
         try{
-          const response = await fetch('https://full-nurse-fellow-halo.trycloudflare.com/api/logout', {
+          const response = await fetch('http://localhost:3000/api/logout', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -101,7 +102,7 @@ function loadProtectedContent(userData) {
 
 async function logoutOnline(){
   try{
-    const response = await fetch('https://full-nurse-fellow-halo.trycloudflare.com/api/logout', {
+    const response = await fetch('http://localhost:3000/api/logout', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -110,7 +111,7 @@ async function logoutOnline(){
     });
     if(response.status === 200){
       showAlert('Logout berhasil!', 'success');
-      window.location.href = 'login.html';
+      window.location.href = '/views/login.html';
     }
   } catch (error) {
     console.error('Logout error:', error);
@@ -122,10 +123,10 @@ async function logoutOnline(){
 async function loadAllChatList() {
   try {
     const [contactRes, groupRes] = await Promise.all([
-      fetch('https://full-nurse-fellow-halo.trycloudflare.com/api/contacts', {
+      fetch('http://localhost:3000/api/contacts', {
         headers: { 'Authorization': `Bearer ${token}` }
       }),
-      fetch('https://full-nurse-fellow-halo.trycloudflare.com/api/allGroup', {
+      fetch('http://localhost:3000/api/allGroup', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
     ]);
@@ -135,7 +136,7 @@ async function loadAllChatList() {
       localStorage.removeItem('token');
       logoutOnline();
       setTimeout(() => {
-        window.location.href = 'login.html';
+        window.location.href = '/views/login.html';
       }, 1500);
       return;
     }
@@ -223,7 +224,7 @@ async function startChat(datanya) {
       throw new Error('ID kontak tidak valid');
     }
 
-    const response = await fetch('https://full-nurse-fellow-halo.trycloudflare.com/api/conversations/start', {
+    const response = await fetch('http://localhost:3000/api/conversations/start', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -277,7 +278,7 @@ pencarian.addEventListener("input", function () {
 
     try {
 
-      const res = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/users/search?q=${keyword}`, {
+      const res = await fetch(`http://localhost:3000/api/users/search?q=${keyword}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -418,7 +419,7 @@ formGroup.addEventListener('submit', async (e) => {
       return;
     }
 
-    const response = await fetch('https://full-nurse-fellow-halo.trycloudflare.com/api/newGroup', {
+    const response = await fetch('http://localhost:3000/api/newGroup', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -435,7 +436,7 @@ formGroup.addEventListener('submit', async (e) => {
     
     if (json.status === 'success') {
       showAlert('Grup berhasil dibuat', 'success');
-      loadGroup()
+      loadAllChatList()
       formGroup.reset();
     } else {
       showAlert(json.message || 'Grup gagal dibuat', 'danger'); // Tampilkan pesan error dari server
@@ -481,7 +482,7 @@ const lawanChat =urlParams.get('username');
 
 const grupId = urlParams.get('grupId')
 
-const socket = io("https://full-nurse-fellow-halo.trycloudflare.com", {
+const socket = io("http://localhost:3000", {
   auth: {
     token: token
   }
@@ -500,7 +501,35 @@ socket.on("connect", () => {
 });
 
 
+// Contoh fungsi saat user klik salah satu grup di UI
+function bukaGrup(idGrup) {
+  currentGrupId = idGrup; // Simpan ID grup yang sedang dibuka ke variabel global
+  
+  // BERITAHU BACKEND: "Saya mau masuk ke room grup ini"
+  socket.emit("joinGroup", idGrup); 
+  
+  loadMessagesGrup(idGrup); // Ambil history chat
+}
 
+socket.on("newGroupMessage", (data) => {
+  console.log("Ada pesan grup baru masuk:", data);
+
+  // CEK: Apakah pesan ini milik grup yang sedang saya buka?
+  // Gunakan 'groupId' (pastikan backend mengirim property ini di objek result)
+  if (data.groupId == currentGrupId) {
+    appendMessage(data)
+      scrollToBottom(); // Scroll otomatis ke bawah
+  } else {
+      // Opsi: Tampilkan notifikasi atau update angka "unread" di daftar grup
+      console.log("Pesan masuk di grup lain");
+      loadAllChatList(); // Update preview pesan terakhir di sidebar
+  }
+});
+
+socket.on("updateGroupContactList", (data) => {
+  console.log("Update sidebar grup:", data);
+  loadAllChatList(); // Panggil fungsi yang me-refresh daftar chat di samping
+});
 socket.on("user_status", (data) => {
 
   // update contact list
@@ -592,7 +621,7 @@ async function sendMessage() {
 
     try {
 
-      const response = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/${conversationId}/send`, {
+      const response = await fetch(`http://localhost:3000/api/${conversationId}/send`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -641,7 +670,7 @@ div.setAttribute("data-username", username);
 div.innerHTML = `
   <div class="message-content">
     <strong>${username}:</strong> 
-    <span class="text" style="white-space: pre-wrap;">${renderContent(message.content)}</span>
+    <span class="text" style="white-space: pre-wrap;">${renderContent(message.content || message.message_text)}</span>
   </div>
 
   <div class="message-actions">
@@ -716,7 +745,7 @@ function updateContactRealtime(message) {
     const lastMsgElem = contactElem.querySelector(".last-message");
     if (lastMsgElem) {
       // Logic deteksi gambar agar tidak muncul URL panjang
-      const isImage = message.content.includes('https://full-nurse-fellow-halo.trycloudflare.com/uploads/');
+      const isImage = message.content.includes('http://localhost:3000/uploads/');
       const textDisplay = isImage ? "📷 Gambar" : message.content;
       
       // Jika grup, tambahkan nama pengirim
@@ -776,7 +805,7 @@ async function loadMessages() {
 
   socket.emit("joinConversation", conversationId);
   try {
-    const response = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/${conversationId}/messages`, {
+    const response = await fetch(`http://localhost:3000/api/${conversationId}/messages`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -880,67 +909,133 @@ function renderContent(content) {
 
 async function loadMessagesGrup() {
   try {
-    const response = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/grup/${grupId}/messages`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+    const response = await fetch(`http://localhost:3000/api/grup/${grupId}/messages`, {
+      headers: { 'Authorization': `Bearer ${token}` }
     });
 
     if (!response.ok) {
-      // const errorData = await response.json();
-      // const errorMsg = errorData.details
-      //   ? `User tidak valid. Detail: ${JSON.stringify(errorData.details)}`
-      //   : errorData.error || 'Gagal memulai chat';
-        
-      // throw new Error(errorMsg);
-      window.location.href = 'login.html?error=unauthorized'
+      window.location.href = 'login.html?error=unauthorized';
+      return;
     }
 
     const messages = await response.json();
     const isipesan = document.getElementById('messages');
-    const namachat =document.getElementById('chat-name')    
+    const namachat = document.getElementById('chat-name');
 
-
-    isipesan.innerHTML = '';
-
-    messages.map(p => {
-      const statusnya =p.sender.stat
-      const statusnyasatu = statusnya === 'online' ? 'online' : 'offline';
-      const statusnyaText =statusnyasatu === 'online' ? 'online' : 'offline';
-      namachat.innerHTML=`#${lawanChat} <div class="contact-status">
-            <span class="status-indicator ${statusnyasatu}"></span>
-            ${statusnyaText}
-          </div>`;
-      const isSent = p.sender.id === currentUserId; // pastikan currentUserId sudah betul
-      const kelas = isSent ? 'message sent' : 'message received';
-      const username = p.sender.username || 'Anonim';
-      const tombolEdit = isSent ? `
-      <button class="btn btn-sm btn-outline-primary" onclick="editMessageGrup(${p.messageId})"  title="Edit Pesan">
-
-        <i class="bi bi-pencil"></i>
-      </button>
-    ` : '';
-      const tombolHapus = isSent ? `
-        <button class="btn btn-sm btn-outline-danger" onclick="deleteMessageGrup(${p.messageId})"  title="Hapus Pesan">
-    <i class="bi bi-trash"></i>
-  </button>
-      ` : '';
-      const pesan = `
-        <div class="${kelas}">
-          <p><strong>${username}:</strong> ${renderContent(p.content)} ${tombolEdit} ${tombolHapus}</p>
-          <div class="message-time">${new Date(p.timestamp).toLocaleTimeString()}</div>
+    // 1. Render Header (Cukup sekali di luar loop)
+    // Gunakan lawanChat (nama grup) yang sudah tersimpan saat klik sidebar
+    namachat.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <div>
+          <span class="fw-bold">#${lawanChat}</span>
+          <div class="contact-status small">
+            <span class="status-indicator online"></span> online
+          </div>
         </div>
-      `;
-      isipesan.innerHTML += pesan;
-      isipesan.scrollTop = isipesan.scrollHeight;
+        <button id="btn_add_member" class="btn btn-sm btn-success">
+          <i class="bi bi-person-plus"></i> Add Member
+        </button>
+      </div>
+    `;
 
+    // 2. Pasang Listener Tombol Add Member
+    document.getElementById('btn_add_member').addEventListener('click', () => {
+      showAddMember(grupId, lawanChat);
     });
+
+    // 3. Render Pesan
+    isipesan.innerHTML = ''; // Kosongkan dulu sebelum isi baru
     
+    if (messages.length === 0) {
+      isipesan.innerHTML = '<div class="text-center text-muted my-5">Belum ada pesan di grup ini.</div>';
+    } else {
+      messages.forEach(p => {
+        const isSent = p.sender.id === currentUserId;
+        const kelas = isSent ? 'message sent' : 'message received';
+        const username = p.sender.username || 'Anonim';
+        
+        const tombolEdit = isSent ? `<button class="btn btn-sm btn-link text-primary p-0 me-1" onclick="editMessageGrup(${p.messageId})"><i class="bi bi-pencil"></i></button>` : '';
+        const tombolHapus = isSent ? `<button class="btn btn-sm btn-link text-danger p-0" onclick="deleteMessageGrup(${p.messageId})"><i class="bi bi-trash"></i></button>` : '';
+
+        const pesan = `
+          <div class="${kelas}">
+            <div class="message-content">
+              <small class="d-block fw-bold">${username}</small>
+              ${renderContent(p.content)}
+              <div class="mt-1">${tombolEdit} ${tombolHapus}</div>
+            </div>
+            <div class="message-time">${new Date(p.timestamp).toLocaleTimeString()}</div>
+          </div>
+        `;
+        isipesan.insertAdjacentHTML('beforeend', pesan);
+      });
+    }
+
+    // Auto-scroll ke bawah
+    isipesan.scrollTop = isipesan.scrollHeight;
+
   } catch (error) {
     console.error('Gagal memuat pesan:', error);
-    if (error.message.includes('401')) {
-      window.location.href = 'login.html';
-    }
+  }
+}
+
+// Fungsi untuk memunculkan input tambah member
+function showAddMember(groupId, groupName) {
+
+  console.log("Tombol Add Member diklik");
+
+  const section = document.getElementById('add-member-section');
+  const targetNameSpan = document.getElementById('target-group-name');
+
+  if (section) {
+      section.style.display = 'block';
+      section.dataset.activeGroupId = groupId;
+
+      if (targetNameSpan) {
+          targetNameSpan.innerText = `Tambah ke Grup: ${groupName}`;
+      }
+  } else {
+      console.log("add-member-section tidak ditemukan");
+  }
+}
+
+// Fungsi untuk sembunyikan input
+function hideAddMember() {
+  const section = document.getElementById('add-member-section');
+  if (section) section.style.display = 'none';
+}
+async function submitAddMember() {
+  const section = document.getElementById('add-member-section');
+  const groupId = section.dataset.activeGroupId;
+  const targetUserId = document.getElementById('target-user-id').value;
+
+  if (!targetUserId) {
+      return alert("Masukkan User ID-nya dulu!");
+  }
+
+  try {
+      const response = await fetch(`http://localhost:3000/api/grup/${groupId}/add-member`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ targetUserId: targetUserId })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+          alert("Mantap! Anggota berhasil ditambahkan.");
+          document.getElementById('target-user-id').value = '';
+          hideAddMember();
+      } else {
+          alert(`Gagal: ${result.message}`);
+          console.log('ada yang salah')
+      }
+  } catch (error) {
+      console.error("Error submit member:", error);
+      alert("Terjadi kesalahan koneksi ke server.");
   }
 }
 // ============================
@@ -953,7 +1048,7 @@ async function deleteMessage(messageId) {
   if (!konfirmasi) return; // Kalau user batal, jangan lanjut
 
   try {
-    const response = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/hapuspesan/${messageId}`, {
+    const response = await fetch(`http://localhost:3000/api/hapuspesan/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -978,7 +1073,7 @@ async function deleteMessageGrup(messageId) {
   if (!konfirmasi) return; // Kalau user batal, jangan lanjut
 
   try {
-    const response = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/delete/grup/${messageId}`, {
+    const response = await fetch(`http://localhost:3000/api/delete/grup/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -1000,7 +1095,7 @@ async function deleteMessageGrup(messageId) {
 async function editMessage(messageId) {
   try {
     // Ambil pesan lama
-    const resGet = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/editpesan/${messageId}`, {
+    const resGet = await fetch(`http://localhost:3000/api/editpesan/${messageId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -1016,7 +1111,7 @@ async function editMessage(messageId) {
     }
 
     // Kirim update ke server
-    const resUpdate = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/updatepesan/${messageId}`, {
+    const resUpdate = await fetch(`http://localhost:3000/api/updatepesan/${messageId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -1041,7 +1136,7 @@ async function editMessage(messageId) {
 async function editMessageGrup(messageId) {
   try {
     // Ambil pesan lama
-    const resGet = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/editpesangrup/${messageId}`, {
+    const resGet = await fetch(`http://localhost:3000/api/editpesangrup/${messageId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -1057,7 +1152,7 @@ async function editMessageGrup(messageId) {
     }
 
     // Kirim update ke server
-    const resUpdate = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/updatepesangrup/${messageId}`, {
+    const resUpdate = await fetch(`http://localhost:3000/api/updatepesangrup/${messageId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -1101,18 +1196,18 @@ function decodeToken(token) {
 
 
 async function sendMessageGrup() {
-  const messageInput = document.getElementById('message-input');
-  const content = messageInput.value.trim();
-  const file = document.getElementById('file-input').files[0];
-  if (!content && !file) return;
-  const formData = new FormData();
-  formData.append('content', content);
-  if (file) {
-  formData.append('image', file);
-}
+      const messageInput = document.getElementById('message-input');
+      const content = messageInput.value.trim();
+      const file = document.getElementById('file-input').files[0];
+      if (!content && !file) return;
+      const formData = new FormData();
+      formData.append('content', content);
+      if (file) {
+      formData.append('image', file);
+    }
 
   try {
-    const response = await fetch(`https://full-nurse-fellow-halo.trycloudflare.com/api/grup/${grupId}/send`, {
+    const response = await fetch(`http://localhost:3000/api/grup/${grupId}/send`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`

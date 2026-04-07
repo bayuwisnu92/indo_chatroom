@@ -670,7 +670,8 @@ div.setAttribute("data-username", username);
 div.innerHTML = `
   <div class="message-content">
     <strong>${username}:</strong> 
-    <span class="text" style="white-space: pre-wrap;">${renderContent(message.content || message.message_text)}</span>
+    <span class="text" >${renderContent(message.content || message.message_text)} </span>
+    <span class="new-message-badge" style="font-size: 11px; font-style: italic; font-weight: 700; color: #dc3545; margin-left: 6px;">pesan baru</span>
   </div>
 
   <div class="message-actions">
@@ -730,43 +731,75 @@ socket.on("updateContactList", (data) => {
   }
 });
 function updateContactRealtime(message) {
+
   const container = document.getElementById("contacts-list");
   if (!container) return;
 
-  // Cari elemen kontak (Private atau Group)
-  let selector = message.conversationId 
-    ? `[data-conversation-id="${message.conversationId}"]` 
+  // Tentukan selector apakah private atau group
+  let selector = message.conversationId
+    ? `[data-conversation-id="${message.conversationId}"]`
     : `[data-group-id="${message.groupId}"]`;
-    
+
   let contactElem = document.querySelector(selector);
 
   if (contactElem) {
-    // 1. Update Pesan Terakhir
+
+    // =========================
+    // 1. Update pesan terakhir
+    // =========================
     const lastMsgElem = contactElem.querySelector(".last-message");
+
     if (lastMsgElem) {
-      // Logic deteksi gambar agar tidak muncul URL panjang
-      const isImage = message.content.includes('http://localhost:3000/uploads/');
+
+      const isImage =
+        message.content &&
+        message.content.includes("http://localhost:3000/uploads/");
+
       const textDisplay = isImage ? "📷 Gambar" : message.content;
-      
-      // Jika grup, tambahkan nama pengirim
-      lastMsgElem.textContent = message.groupId 
-        ? `${message.senderName}: ${textDisplay}` 
+
+      lastMsgElem.textContent = message.groupId
+        ? `${message.senderName}: ${textDisplay}`
         : textDisplay;
+
+      // Tandai sebagai pesan baru (jika bukan pesan kita sendiri)
+      if (message.senderId != currentUserId) {
+        lastMsgElem.classList.add("new-message");
+      } else {
+        lastMsgElem.classList.remove("new-message");
+      }
+
     }
 
-    // 2. Update Waktu
+    // =========================
+    // 2. Update waktu
+    // =========================
     const timeElem = contactElem.querySelector(".message-time");
     if (timeElem) {
       timeElem.textContent = "Baru saja";
     }
 
+    // =========================
     // 3. Pindahkan ke paling atas
+    // =========================
     container.prepend(contactElem);
+
+    // =========================
+    // 4. Efek highlight (opsional)
+    // =========================
+    contactElem.style.transition = "background 0.4s";
+    contactElem.style.backgroundColor = "#fff3cd";
+
+    setTimeout(() => {
+      contactElem.style.backgroundColor = "";
+    }, 1200);
+
   } else {
-    // Jika kontaknya belum ada di list (chat baru dari orang baru), 
-    // panggil fungsi load agar list di-refresh dari database
+
+    // Jika kontak belum ada di list
     loadAllChatList();
+
   }
+
 }
 
 // ============================

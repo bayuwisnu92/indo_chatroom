@@ -359,6 +359,9 @@
 .upload-btn:hover {
   background-color: #e2e6ea;
 }
-
+.last-message.new-message {
+  color: #dc3545;
+  font-weight: 600;
+}
 
   

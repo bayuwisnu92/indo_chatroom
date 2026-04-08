@@ -31,7 +31,7 @@ form.addEventListener('submit', async (e) => {
             throw new Error('Password must be at least 3 characters');
         }
 
-        const response = await fetch('http://localhost:3000/auth/register', {
+        const response = await fetch('https://east-clone-stream-sympathy.trycloudflare.com/auth/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

@@ -32,7 +32,7 @@ if (!token) {
 // Fungsi verifikasi token
 async function verifyToken(token) {
   try {
-    const response = await fetch('http://localhost:3000/api/verify-token', {
+    const response = await fetch('https://east-clone-stream-sympathy.trycloudflare.com/api/verify-token', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -72,7 +72,7 @@ function loadProtectedContent(userData) {
     
       document.getElementById('logout').addEventListener('click', async () => {
         try{
-          const response = await fetch('http://localhost:3000/api/logout', {
+          const response = await fetch('https://east-clone-stream-sympathy.trycloudflare.com/api/logout', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -102,7 +102,7 @@ function loadProtectedContent(userData) {
 
 async function logoutOnline(){
   try{
-    const response = await fetch('http://localhost:3000/api/logout', {
+    const response = await fetch('https://east-clone-stream-sympathy.trycloudflare.com/api/logout', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -123,10 +123,10 @@ async function logoutOnline(){
 async function loadAllChatList() {
   try {
     const [contactRes, groupRes] = await Promise.all([
-      fetch('http://localhost:3000/api/contacts', {
+      fetch('https://east-clone-stream-sympathy.trycloudflare.com/api/contacts', {
         headers: { 'Authorization': `Bearer ${token}` }
       }),
-      fetch('http://localhost:3000/api/allGroup', {
+      fetch('https://east-clone-stream-sympathy.trycloudflare.com/api/allGroup', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
     ]);
@@ -148,14 +148,18 @@ async function loadAllChatList() {
     const contacts = await contactRes.json();
     const groups = await groupRes.json();
 
+    // Di dalam loadAllChatList() bagian formattedContacts
     const formattedContacts = contacts.map(c => ({
       type: 'user',
       id: c.user_id,
       conversationId: c.conversation_id,
       name: c.username,
-      lastMessage: c.last_message,
+      lastMessage: c.last_message, 
       lastTime: c.last_message_time,
-      status: c.status
+      status: c.status,
+      // TAMBAHKAN DUA BARIS INI:
+      messageType: c.message_type, 
+      imageUrl: c.image_url 
     }));
     formattedContacts.forEach(c => {
       conversationMap[c.conversationId] = c.id;
@@ -224,7 +228,7 @@ async function startChat(datanya) {
       throw new Error('ID kontak tidak valid');
     }
 
-    const response = await fetch('http://localhost:3000/api/conversations/start', {
+    const response = await fetch('https://east-clone-stream-sympathy.trycloudflare.com/api/conversations/start', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -278,7 +282,7 @@ pencarian.addEventListener("input", function () {
 
     try {
 
-      const res = await fetch(`http://localhost:3000/api/users/search?q=${keyword}`, {
+      const res = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/users/search?q=${keyword}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -302,39 +306,33 @@ pencarian.addEventListener("input", function () {
 loadAllChatList()
 function listContact(combinedList) {
   const contactsList = document.getElementById('contacts-list');
+  // ... (spinner loading tetap ada) ...
 
-  // Loading
-  contactsList.innerHTML = `
-    <div class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="mt-2 text-muted">Memuat kontak & grup...</p>
-    </div>
-  `;
-
-  if (!combinedList || combinedList.length === 0) {
-    contactsList.innerHTML = `
-      <div class="empty-state text-center py-5">
-        <i class="fas fa-user-friends fa-3x mb-3 text-muted"></i>
-        <h5 class="text-muted">Tidak ada kontak/grup</h5>
-        <p class="text-muted">Mulai obrolan dengan teman atau grup</p>
-      </div>
-    `;
-    return;
-  }
-
-  // Clear & render
   contactsList.innerHTML = combinedList.map(item => {
     const time = item.lastTime ? formatDate(item.lastTime) : '';
-    const lastMsg = item.lastMessage || 'Tidak ada pesan';
+    
+    // AMBIL DATA PESAN
+    const rawContent = item.lastMessage || '';
+    const hasImageUrl = item.imageUrl && item.imageUrl !== 'null';
+    const isImageFormatLama = rawContent.includes('https://east-clone-stream-sympathy.trycloudflare.com/uploads/');
+    const isImageFormatBaru = item.messageType === 'image';
 
+    let displayMsg = '';
+
+    // LOGIKA PENENTUAN ICON
+    if (isImageFormatBaru || hasImageUrl || isImageFormatLama) {
+      // Jika ada teks caption (format baru) atau teks selain URL (format lama)
+      const caption = (rawContent && !isImageFormatLama) ? rawContent : 'Gambar';
+      displayMsg = `<i class="bi bi-camera-fill"></i> ${caption}`;
+    } else {
+      displayMsg = rawContent || 'Tidak ada pesan';
+    }
+
+    // Render HTML (User atau Group)
     if (item.type === 'user') {
       const status = item.status === 'online' ? 'online' : 'offline';
-      const statusText = status === 'online' ? 'Online' : 'Offline';
-
       return `
-        <div class="contact-card" data-user-id="${item.id}">
+        <div class="contact-card" data-user-id="${item.id}" data-conversation-id="${item.conversationId}">
           <div class="contact-main">
             <div class="contact-avatar">${item.name.charAt(0).toUpperCase()}</div>
             <div class="contact-info">
@@ -344,54 +342,41 @@ function listContact(combinedList) {
               </div>
               <div class="contact-status-row">
                 <span class="status-indicator ${status}"></span>
-                <span class="status-text">${statusText}</span>
+                <span class="status-text">${status}</span>
               </div>
-              <p class="last-message">${lastMsg}</p>
+              <p class="last-message text-truncate">${displayMsg}</p>
             </div>
           </div>
-          <button class="btn btn-chat"
-                  data-user-id="${item.id}"
-                  onClick="startChat({
-                    otherUserId: ${item.id},
-                    username: '${item.name}',
-                    status: '${item.status}'
-                  })">
+          <button class="btn btn-chat" onClick="startChat({otherUserId: ${item.id}, username: '${item.name}'})">
             <i class="fas fa-comment-dots"></i> Chat
           </button>
-        </div>
-      `;
+        </div>`;
     }
-
-    // Grup
+    
+    // Render HTML Group
     if (item.type === 'group') {
       return `
         <div class="contact-card" data-group-id="${item.id}">
           <div class="contact-main">
-            <div class="contact-avatar bg-primary text-white">
-              ${item.name.charAt(0).toUpperCase()}
-            </div>
+            <div class="contact-avatar bg-primary text-white">${item.name.charAt(0).toUpperCase()}</div>
             <div class="contact-info">
               <div class="contact-header">
                 <h5 class="contact-name"><small class="nama-grup">Group:</small> ${item.name}</h5>
                 <span class="message-time">${time}</span>
               </div>
-              <p class="last-message">${item.sender || ''} : ${lastMsg}</p>
+              <p class="last-message text-truncate">
+                <strong>${item.sender || ''}:</strong> ${displayMsg}
+              </p>
             </div>
           </div>
-          <button class="btn btn-chat"
-                  data-group-id="${item.id}"
-                  data-group-name="${item.name}"
-                  onClick="window.location.href='contact.html?grupId=${item.id}&username=${item.name}'">
+          <button class="btn btn-chat" onClick="window.location.href='contact.html?grupId=${item.id}&username=${item.name}'">
             <i class="fas fa-comment-dots"></i> Chat
           </button>
-        </div>
-      `;
+        </div>`;
     }
-
     return '';
   }).join('');
 }
-
 
 function mapSearchUsers(users) {
   return users.map(user => ({
@@ -419,7 +404,7 @@ formGroup.addEventListener('submit', async (e) => {
       return;
     }
 
-    const response = await fetch('http://localhost:3000/api/newGroup', {
+    const response = await fetch('https://east-clone-stream-sympathy.trycloudflare.com/api/newGroup', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -482,7 +467,7 @@ const lawanChat =urlParams.get('username');
 
 const grupId = urlParams.get('grupId')
 
-const socket = io("http://localhost:3000", {
+const socket = io("https://east-clone-stream-sympathy.trycloudflare.com", {
   auth: {
     token: token
   }
@@ -638,7 +623,7 @@ async function sendMessage() {
 
     try {
 
-      const response = await fetch(`http://localhost:3000/api/${conversationId}/send`, {
+      const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/${conversationId}/send`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -665,46 +650,37 @@ async function sendMessage() {
   }
 }
 function appendMessage(message) {
-
   const chatBox = document.getElementById("messages");
-
-  if (!chatBox) {
-    console.warn("messages belum ada di DOM");
-    return;
-  }
+  if (!chatBox) return;
 
   const isSent = message.senderId == currentUserId;
   const kelas = isSent ? 'message sent' : 'message received';
-
   const username = message.senderName || 'User';
 
+  let bodyHtml = '';
+  // Jika pesan mengandung image (dari socket biasanya membawa imageUrl atau messageType)
+  if (message.messageType === 'image' || message.imageUrl) {
+    bodyHtml = `
+      <img src="https://east-clone-stream-sympathy.trycloudflare.com/uploads/${message.imageUrl}" class="chat-image mb-2" style="max-width: 200px; border-radius: 8px;">
+      ${message.content ? `<p class="mb-0">${renderContent(message.content)}</p>` : ''}`;
+  } else {
+    bodyHtml = renderContent(message.content || message.message_text);
+  }
+
   const div = document.createElement("div");
-div.className = kelas;
+  div.className = kelas;
+  div.setAttribute("data-id", message.messageId);
 
-div.setAttribute("data-id", message.messageId);
-div.setAttribute("data-username", username);
-
-div.innerHTML = `
-  <div class="message-content">
-    <strong>${username}:</strong> 
-    <span class="text" >${renderContent(message.content || message.message_text)} </span>
-    <span class="new-message-badge" style="font-size: 11px; font-style: italic; font-weight: 700; color: #dc3545; margin-left: 6px;">pesan baru</span>
-  </div>
-
-  <div class="message-actions">
-    ${isSent ? `
-      <button class="btn btn-sm btn-outline-danger" onclick="editMessage(${message.messageId})">✏️</button>
-      <button class="btn btn-sm btn-outline-danger" onclick="deleteMessage(${message.messageId})">🗑️</button>
-    ` : ''}
-  </div>
-
-  <div class="message-time">
-    ${new Date(message.timestamp).toLocaleTimeString()}
-  </div>
-`;
+  div.innerHTML = `
+    <div class="message-content shadow-sm">
+      <small class="d-block fw-bold mb-1">${username}</small>
+      ${bodyHtml}
+      <span class="new-message-badge" style="font-size: 9px; color: #dc3545;">baru</span>
+    </div>
+    <div class="message-time">${new Date(message.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+  `;
 
   chatBox.appendChild(div);
-
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 let conversationMap = {};
@@ -748,11 +724,9 @@ socket.on("updateContactList", (data) => {
   }
 });
 function updateContactRealtime(message) {
-
   const container = document.getElementById("contacts-list");
   if (!container) return;
 
-  // Tentukan selector apakah private atau group
   let selector = message.conversationId
     ? `[data-conversation-id="${message.conversationId}"]`
     : `[data-group-id="${message.groupId}"]`;
@@ -760,63 +734,37 @@ function updateContactRealtime(message) {
   let contactElem = document.querySelector(selector);
 
   if (contactElem) {
-
-    // =========================
-    // 1. Update pesan terakhir
-    // =========================
     const lastMsgElem = contactElem.querySelector(".last-message");
 
     if (lastMsgElem) {
+      // LOGIKA BARU: Cek tipe pesan
+      let textDisplay = "";
+      
+      if (message.messageType === 'image' || message.imageUrl) {
+        // Jika ada teks caption, tampilkan. Jika tidak, tampilkan label Gambar
+        textDisplay = message.content ? `📷 ${message.content}` : "📷 Gambar";
+      } else {
+        textDisplay = message.content || "Pesan baru";
+      }
 
-      const isImage =
-        message.content &&
-        message.content.includes("http://localhost:3000/uploads/");
-
-      const textDisplay = isImage ? "📷 Gambar" : message.content;
-
+      // Format tampilan untuk Grup (Nama Pengirim: Pesan)
       lastMsgElem.textContent = message.groupId
         ? `${message.senderName}: ${textDisplay}`
         : textDisplay;
 
-      // Tandai sebagai pesan baru (jika bukan pesan kita sendiri)
+      // Tandai pesan baru
       if (message.senderId != currentUserId) {
         lastMsgElem.classList.add("new-message");
-      } else {
-        lastMsgElem.classList.remove("new-message");
       }
-
     }
 
-    // =========================
-    // 2. Update waktu
-    // =========================
     const timeElem = contactElem.querySelector(".message-time");
-    if (timeElem) {
-      timeElem.textContent = "Baru saja";
-    }
+    if (timeElem) timeElem.textContent = "Baru saja";
 
-    // =========================
-    // 3. Pindahkan ke paling atas
-    // =========================
     container.prepend(contactElem);
-
-    // =========================
-    // 4. Efek highlight (opsional)
-    // =========================
-    contactElem.style.transition = "background 0.4s";
-    contactElem.style.backgroundColor = "#fff3cd";
-
-    setTimeout(() => {
-      contactElem.style.backgroundColor = "";
-    }, 1200);
-
   } else {
-
-    // Jika kontak belum ada di list
     loadAllChatList();
-
   }
-
 }
 
 // ============================
@@ -852,13 +800,10 @@ function showContacts() {
 
 let lawanChatId = null;
 async function loadMessages() {
-
   socket.emit("joinConversation", conversationId);
   try {
-    const response = await fetch(`http://localhost:3000/api/${conversationId}/messages`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+    const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/${conversationId}/messages`, {
+      headers: { 'Authorization': `Bearer ${token}` }
     });
 
     if (!response.ok) {
@@ -866,7 +811,7 @@ async function loadMessages() {
       return;
     }
 
-    const data = await response.json(); // Ambil data sekali saja
+    const data = await response.json();
     const messages = data.messages || [];
     const lawanChat = data.lawanChat || {};
 
@@ -875,91 +820,82 @@ async function loadMessages() {
 
     isipesan.innerHTML = '';
 
-    // Tampilkan nama dan status lawan chat
+    // Render Header
     const statusnya = lawanChat.status === 'online' ? 'online' : 'offline';
-    console.log("lawanChat:", lawanChat);
     namachat.innerHTML = `
-  <div class="chat-header">
-    <strong>#${lawanChat.username || 'Lawan Chat'}</strong>
-    <div class="contact-status">
-      <span class="status-indicator ${statusnya}"></span>
-      <span class="status-text">${statusnya}</span>
-      ${statusnya !== 'online' && lawanChat.lastOnline ? `
-        <span class="pesan">• terakhir online: ${new Date(lawanChat.lastOnline).toLocaleTimeString()}</span>
-      ` : ''}
-    </div>
-  </div>
-`;
-
-
-    // Tampilkan pesan satu per satu
-    messages.forEach(p => {
-      const isSent = p.sender.id === currentUserId;
-      const kelas = isSent ? 'message sent' : 'message received';
-      const username = p.sender.username || 'Anonim';
-    
-      // Tambahkan tombol hapus hanya jika pesan milik user
-      const tombolHapus = isSent ? `
-        <button class="btn btn-sm btn-outline-danger" onclick="deleteMessage(${p.messageId})"  title="Hapus Pesan">
-    <i class="bi bi-trash"></i>
-  </button>
-      ` : '';
-      const tombolEdit = isSent ? `
-      <button class="btn btn-sm btn-outline-primary" onclick="editMessage(${p.messageId})"  title="Edit Pesan">
-
-        <i class="bi bi-pencil"></i>
-      </button>
-    ` : '';
-    
-    
-      const pesan = `
-        <div class="${kelas}">
-          <p>
-            <strong>${username}:</strong> ${renderContent(p.content)}
-
-            ${tombolEdit}
-            ${tombolHapus}
-          </p>
-          <div class="message-time">${new Date(p.timestamp).toLocaleTimeString()}</div>
+      <div class="chat-header">
+        <strong>#${lawanChat.username || 'Lawan Chat'}</strong>
+        <div class="contact-status">
+          <span class="status-indicator ${statusnya}"></span>
+          <span class="status-text">${statusnya}</span>
         </div>
-      `;
-    
-      isipesan.innerHTML += pesan;
-    });
-    
+      </div>`;
+
+    // ... kode header tetap sama ...
+
+messages.forEach(p => {
+  const isSent = p.sender.id === currentUserId;
+  const kelas = isSent ? 'message sent' : 'message received';
+  const username = p.sender.username || 'Anonim';
+
+  let bodyPesan = '';
+
+  // PERBAIKAN DI SINI: Gunakan messageType dan imageUrl (CamelCase)
+  // Sesuai dengan mapping di ChatController: messages = rawMessages.map(msg => ({ messageType: msg.message_type ... }))
+  
+  if (p.messageType === 'image' && p.imageUrl) {
+    bodyPesan = `
+      <div class="chat-image-container">
+        <img src="https://east-clone-stream-sympathy.trycloudflare.com/uploads/${p.imageUrl}" 
+             alt="image" 
+             class="chat-image img-fluid" 
+             style="max-width: 200px; border-radius: 8px; cursor: pointer; display: block;"
+             onclick="window.open(this.src)">
+        ${p.content ? `<p class="mt-2 mb-0">${renderContent(p.content)}</p>` : ''}
+      </div>`;
+  } else {
+    bodyPesan = renderContent(p.content || '');
+  }
+
+  // Gunakan p.messageType juga untuk pengecekan tombol edit
+  const tombolHapus = isSent ? `<button class="btn btn-sm btn-outline-danger border-0" onclick="deleteMessage(${p.messageId})"><i class="bi bi-trash"></i></button>` : '';
+  const tombolEdit = (isSent && p.messageType === 'text') ? `<button class="btn btn-sm btn-outline-primary border-0" onclick="editMessage(${p.messageId})"><i class="bi bi-pencil"></i></button>` : '';
+
+  const pesanHtml = `
+    <div class="${kelas}" data-id="${p.messageId}">
+      <div class="message-content shadow-sm">
+        <p class="mb-1">
+          <strong>${username}:</strong> ${bodyPesan}
+        </p>
+        <div class="text-end">${tombolEdit} ${tombolHapus}</div>
+      </div>
+      <div class="message-time">${new Date(p.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+    </div>
+  `;
+
+  isipesan.insertAdjacentHTML('beforeend', pesanHtml);
+});
+
+// ... scroll ke bawah ...
 
     isipesan.scrollTop = isipesan.scrollHeight;
 
   } catch (error) {
     console.error('Gagal memuat pesan:', error);
-    if (error.message.includes('401')) {
-      window.location.href = 'login.html';
-    }
   }
-
-
 }
 
 function renderContent(content) {
-  const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
-
-  try {
-    const url = new URL(content);
-    const isImage = imageExtensions.some(ext => url.pathname.endsWith(ext));
-    if (isImage) {
-      return `<img src="${url.href}" alt="image" class="chat-image" style="max-width: 200px; max-height: 200px; border-radius: 8px;">`;
-    }
-  } catch (e) {
-    // bukan URL, biarkan sebagai teks biasa
-  }
-
-  // jika bukan gambar, tampilkan teks biasa (dengan sanitasi dasar)
-  return content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  // Jika content null atau undefined, kembalikan string kosong
+  if (!content) return "";
+  
+  // Sanitasi teks dari tag HTML
+  return content.toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 async function loadMessagesGrup() {
   try {
-    const response = await fetch(`http://localhost:3000/api/grup/${grupId}/messages`, {
+    const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/grup/${grupId}/messages`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
@@ -1034,18 +970,16 @@ async function loadMessagesGrup() {
             <i class="bi bi-trash3"></i>
           </button>` : '';
 
-        const pesanHtml = `
-          <div class="${kelas}">
-            <div class="message-content shadow-sm">
-              <small class="d-block fw-bold text-info" style="font-size: 11px; margin-bottom: 2px;">
-                ${username}
-              </small>
-              ${renderContent(p.content)}
-              <div class="text-end mt-1" style="min-width: 40px;">
-                ${tombolEdit} ${tombolHapus}
-              </div>
+          const pesanHtml = `
+          <div class="${kelas}" data-id="${p.messageId}" data-username="${username}">
+            <p>
+              <strong>${username}:</strong> ${renderContent(p.content)}
+              ${tombolEdit}
+              ${tombolHapus}
+            </p>
+            <div class="message-time">
+              ${new Date(p.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
             </div>
-            <div class="message-time">${new Date(p.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
           </div>
         `;
         isipesan.insertAdjacentHTML('beforeend', pesanHtml);
@@ -1102,7 +1036,7 @@ document.getElementById('search-username').addEventListener('input', async (e) =
 
   try {
       console.log("Mencari user:", query); // Debugging
-      const response = await fetch(`http://localhost:3000/api/usersgrup/search?username=${query}`, {
+      const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/usersgrup/search?username=${query}`, {
           headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -1146,7 +1080,7 @@ async function submitAddMember() {
   }
 
   try {
-      const response = await fetch(`http://localhost:3000/api/grup/${groupId}/add-member`, {
+      const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/grup/${groupId}/add-member`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -1180,7 +1114,7 @@ async function deleteMessage(messageId) {
   if (!konfirmasi) return; // Kalau user batal, jangan lanjut
 
   try {
-    const response = await fetch(`http://localhost:3000/api/hapuspesan/${messageId}`, {
+    const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/hapuspesan/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -1205,7 +1139,7 @@ async function deleteMessageGrup(messageId) {
   if (!konfirmasi) return; // Kalau user batal, jangan lanjut
 
   try {
-    const response = await fetch(`http://localhost:3000/api/delete/grup/${messageId}`, {
+    const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/delete/grup/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -1227,7 +1161,7 @@ async function deleteMessageGrup(messageId) {
 async function editMessage(messageId) {
   try {
     // Ambil pesan lama
-    const resGet = await fetch(`http://localhost:3000/api/editpesan/${messageId}`, {
+    const resGet = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/editpesan/${messageId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -1243,7 +1177,7 @@ async function editMessage(messageId) {
     }
 
     // Kirim update ke server
-    const resUpdate = await fetch(`http://localhost:3000/api/updatepesan/${messageId}`, {
+    const resUpdate = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/updatepesan/${messageId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -1268,7 +1202,7 @@ async function editMessage(messageId) {
 async function editMessageGrup(messageId) {
   try {
     // Ambil pesan lama
-    const resGet = await fetch(`http://localhost:3000/api/editpesangrup/${messageId}`, {
+    const resGet = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/editpesangrup/${messageId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -1284,7 +1218,7 @@ async function editMessageGrup(messageId) {
     }
 
     // Kirim update ke server
-    const resUpdate = await fetch(`http://localhost:3000/api/updatepesangrup/${messageId}`, {
+    const resUpdate = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/updatepesangrup/${messageId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -1339,7 +1273,7 @@ async function sendMessageGrup() {
     }
 
   try {
-    const response = await fetch(`http://localhost:3000/api/grup/${grupId}/send`, {
+    const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/grup/${grupId}/send`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`

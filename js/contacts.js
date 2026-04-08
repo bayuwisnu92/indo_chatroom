@@ -32,7 +32,7 @@ if (!token) {
 // Fungsi verifikasi token
 async function verifyToken(token) {
   try {
-    const response = await fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/api/verify-token', {
+    const response = await fetch('http://localhost:3000/api/verify-token', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -72,7 +72,7 @@ function loadProtectedContent(userData) {
     
       document.getElementById('logout').addEventListener('click', async () => {
         try{
-          const response = await fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/api/logout', {
+          const response = await fetch('http://localhost:3000/api/logout', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -102,7 +102,7 @@ function loadProtectedContent(userData) {
 
 async function logoutOnline(){
   try{
-    const response = await fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/api/logout', {
+    const response = await fetch('http://localhost:3000/api/logout', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -119,14 +119,14 @@ async function logoutOnline(){
   }
 }
 
-// Ambil daftar kontak dari backend
+// Ambil daftar kontak dari backenda
 async function loadAllChatList() {
   try {
     const [contactRes, groupRes] = await Promise.all([
-      fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/api/contacts', {
+      fetch('http://localhost:3000/api/contacts', {
         headers: { 'Authorization': `Bearer ${token}` }
       }),
-      fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/api/allGroup', {
+      fetch('http://localhost:3000/api/allGroup', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
     ]);
@@ -164,14 +164,24 @@ async function loadAllChatList() {
     formattedContacts.forEach(c => {
       conversationMap[c.conversationId] = c.id;
     });
-    const formattedGroups = groups.map(g => ({
-      type: 'group',
-      id: g.group_id,
-      name: g.group_name,
-      lastMessage: g.last_message,
-      lastTime: g.last_message_time,
-      sender: g.sender_username
-    }));
+    const formattedGroups = groups.map(g => {
+
+      let lastMsg = g.last_message;
+    
+      if (!lastMsg && g.message_type === "image") {
+        lastMsg = "📷 Foto";
+      }
+    
+      return {
+        type: 'group',
+        id: g.group_id,
+        name: g.group_name,
+        lastMessage: lastMsg || "Belum ada pesan",
+        lastTime: g.last_message_time,
+        sender: g.sender_username
+      };
+    
+    });
 
     // Gabungkan dan sortir berdasarkan waktu pesan terakhir
     const combined = [...formattedContacts, ...formattedGroups]
@@ -228,7 +238,7 @@ async function startChat(datanya) {
       throw new Error('ID kontak tidak valid');
     }
 
-    const response = await fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/api/conversations/start', {
+    const response = await fetch('http://localhost:3000/api/conversations/start', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -282,7 +292,7 @@ pencarian.addEventListener("input", function () {
 
     try {
 
-      const res = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/users/search?q=${keyword}`, {
+      const res = await fetch(`http://localhost:3000/api/users/search?q=${keyword}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -314,7 +324,7 @@ function listContact(combinedList) {
     // AMBIL DATA PESAN
     const rawContent = item.lastMessage || '';
     const hasImageUrl = item.imageUrl && item.imageUrl !== 'null';
-    const isImageFormatLama = rawContent.includes('https://projects-cherry-liabilities-dan.trycloudflare.com/uploads/');
+    const isImageFormatLama = rawContent.includes('http://localhost:3000/uploads/');
     const isImageFormatBaru = item.messageType === 'image';
 
     let displayMsg = '';
@@ -404,7 +414,7 @@ formGroup.addEventListener('submit', async (e) => {
       return;
     }
 
-    const response = await fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/api/newGroup', {
+    const response = await fetch('http://localhost:3000/api/newGroup', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -467,7 +477,7 @@ const lawanChat =urlParams.get('username');
 
 const grupId = urlParams.get('grupId')
 
-const socket = io("https://projects-cherry-liabilities-dan.trycloudflare.com", {
+const socket = io("http://localhost:3000", {
   auth: {
     token: token
   }
@@ -516,15 +526,16 @@ socket.on("newGroupAssigned", (data) => {
 socket.on("newGroupMessage", (data) => {
   console.log("Ada pesan grup baru masuk:", data);
 
-  // CEK: Apakah pesan ini milik grup yang sedang saya buka?
-  // Gunakan 'groupId' (pastikan backend mengirim property ini di objek result)
+  // CEK: Apakah pesan ini milik grup yang sedang dibuka?
   if (data.groupId == currentGrupId) {
-    appendMessage(data)
-      scrollToBottom(); // Scroll otomatis ke bawah
+    // GUNAKAN FUNGSI BARU YANG SUPPORT GAMBAR
+    appendMessage(data); 
+    scrollToBottom(); 
   } else {
-      // Opsi: Tampilkan notifikasi atau update angka "unread" di daftar grup
-      console.log("Pesan masuk di grup lain");
-      loadAllChatList(); // Update preview pesan terakhir di sidebar
+    // Jika pesan masuk di grup lain, update sidebar 
+    // agar muncul ikon kamera 📷 dan teks terakhir
+    console.log("Pesan masuk di grup lain");
+    loadAllChatList(); 
   }
 });
 
@@ -623,7 +634,7 @@ async function sendMessage() {
 
     try {
 
-      const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/${conversationId}/send`, {
+      const response = await fetch(`http://localhost:3000/api/${conversationId}/send`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -661,7 +672,7 @@ function appendMessage(message) {
   // Jika pesan mengandung image (dari socket biasanya membawa imageUrl atau messageType)
   if (message.messageType === 'image' || message.imageUrl) {
     bodyHtml = `
-      <img src="https://projects-cherry-liabilities-dan.trycloudflare.com/uploads/${message.imageUrl}" class="chat-image mb-2" style="max-width: 200px; border-radius: 8px;">
+      <img src="http://localhost:3000/uploads/${message.imageUrl}" class="chat-image mb-2" style="max-width: 200px; border-radius: 8px;">
       ${message.content ? `<p class="mb-0">${renderContent(message.content)}</p>` : ''}`;
   } else {
     bodyHtml = renderContent(message.content || message.message_text);
@@ -802,7 +813,7 @@ let lawanChatId = null;
 async function loadMessages() {
   socket.emit("joinConversation", conversationId);
   try {
-    const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/${conversationId}/messages`, {
+    const response = await fetch(`http://localhost:3000/api/${conversationId}/messages`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
@@ -846,7 +857,7 @@ messages.forEach(p => {
   if (p.messageType === 'image' && p.imageUrl) {
     bodyPesan = `
       <div class="chat-image-container">
-        <img src="https://projects-cherry-liabilities-dan.trycloudflare.com/uploads/${p.imageUrl}" 
+        <img src="http://localhost:3000/uploads/${p.imageUrl}" 
              alt="image" 
              class="chat-image img-fluid" 
              style="max-width: 200px; border-radius: 8px; cursor: pointer; display: block;"
@@ -895,7 +906,7 @@ function renderContent(content) {
 
 async function loadMessagesGrup() {
   try {
-    const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/grup/${grupId}/messages`, {
+    const response = await fetch(`http://localhost:3000/api/grup/${grupId}/messages`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
@@ -905,7 +916,14 @@ async function loadMessagesGrup() {
     }
 
     const data = await response.json(); 
-    const messages = data.messages; // Array pesan hasil mapping backend
+    const messages = data.messages.map(m => ({
+      messageId: m.messageId,
+      content: m.content,
+      messageType: m.messageType,
+      imageUrl: m.imageUrl,
+      timestamp: m.timestamp,
+      sender: m.sender
+    }));
     const myRole = data.role;       // 'admin' atau 'member'
 
     const isipesan = document.getElementById('messages');
@@ -952,38 +970,45 @@ async function loadMessagesGrup() {
         </div>`;
     } else {
       messages.forEach(p => {
-        // PENTING: Gunakan p.sender.id karena di backend kamu bungkus dalam objek sender
         const isSent = p.sender.id === currentUserId; 
         const kelas = isSent ? 'message sent' : 'message received';
-        
-        // PENTING: Gunakan p.sender.username agar tidak jadi "Anonim"
         const username = p.sender.username || 'User';
         
-        // Tombol Edit/Hapus (Hanya muncul jika pesan milik sendiri)
-        const tombolEdit = isSent ? `
-          <button class="btn btn-sm btn-link text-primary p-0 me-1" onclick="editMessageGrup(${p.messageId})">
-            <i class="bi bi-pencil-square"></i>
-          </button>` : '';
-          
-        const tombolHapus = isSent ? `
-          <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteMessageGrup(${p.messageId})">
-            <i class="bi bi-trash3"></i>
-          </button>` : '';
-
-          const pesanHtml = `
-          <div class="${kelas}" data-id="${p.messageId}" data-username="${username}">
-            <p>
-              <strong>${username}:</strong> ${renderContent(p.content)}
-              ${tombolEdit}
-              ${tombolHapus}
-            </p>
-            <div class="message-time">
-              ${new Date(p.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
-            </div>
-          </div>
-        `;
+        // DETEKSI PESAN GAMBAR
+        const isImage = p.messageType === 'image' || (p.imageUrl && p.imageUrl !== 'null');
+        let contentHtml = '';
+    
+        if (isImage) {
+            // Render Gambar + Teks (Caption) di bawahnya jika ada
+            contentHtml = `
+                <div class="chat-image-wrap">
+                    <img src="http://localhost:3000/uploads/${p.imageUrl}" 
+                         class="img-fluid rounded shadow-sm" 
+                         style="max-width: 200px; cursor: pointer;" 
+                         onclick="window.open(this.src)">
+                    ${p.content ? `<p class="mt-2 mb-0" style="font-size: 14px;">${renderContent(p.content)}</p>` : ''}
+                </div>`;
+        } else {
+            // Teks Biasa
+            contentHtml = renderContent(p.content || '');
+        }
+    
+        const tombolEdit = (isSent && !isImage) ? `<button class="btn btn-sm text-primary p-0 me-1" onclick="editMessageGrup(${p.messageId})"><i class="bi bi-pencil-square"></i></button>` : '';
+        const tombolHapus = isSent ? `<button class="btn btn-sm text-danger p-0" onclick="deleteMessageGrup(${p.messageId})"><i class="bi bi-trash3"></i></button>` : '';
+    
+        const pesanHtml = `
+            <div class="${kelas}" data-id="${p.messageId}">
+                <div class="message-bubble p-2 rounded shadow-sm bg-white border">
+                    <small class="d-block fw-bold text-primary mb-1" style="font-size: 11px;">${username}</small>
+                    <div class="message-text text-dark">${contentHtml}</div>
+                    <div class="d-flex justify-content-end align-items-center mt-1" style="font-size: 10px; opacity: 0.6;">
+                        ${tombolEdit} ${tombolHapus}
+                        <span class="ms-1">${new Date(p.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                    </div>
+                </div>
+            </div>`;
         isipesan.insertAdjacentHTML('beforeend', pesanHtml);
-      });
+    });
     }
 
     // Auto-scroll ke pesan paling bawah
@@ -1036,7 +1061,7 @@ document.getElementById('search-username').addEventListener('input', async (e) =
 
   try {
       console.log("Mencari user:", query); // Debugging
-      const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/usersgrup/search?username=${query}`, {
+      const response = await fetch(`http://localhost:3000/api/usersgrup/search?username=${query}`, {
           headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -1080,7 +1105,7 @@ async function submitAddMember() {
   }
 
   try {
-      const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/grup/${groupId}/add-member`, {
+      const response = await fetch(`http://localhost:3000/api/grup/${groupId}/add-member`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -1114,7 +1139,7 @@ async function deleteMessage(messageId) {
   if (!konfirmasi) return; // Kalau user batal, jangan lanjut
 
   try {
-    const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/hapuspesan/${messageId}`, {
+    const response = await fetch(`http://localhost:3000/api/hapuspesan/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -1139,7 +1164,7 @@ async function deleteMessageGrup(messageId) {
   if (!konfirmasi) return; // Kalau user batal, jangan lanjut
 
   try {
-    const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/delete/grup/${messageId}`, {
+    const response = await fetch(`http://localhost:3000/api/delete/grup/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -1161,7 +1186,7 @@ async function deleteMessageGrup(messageId) {
 async function editMessage(messageId) {
   try {
     // Ambil pesan lama
-    const resGet = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/editpesan/${messageId}`, {
+    const resGet = await fetch(`http://localhost:3000/api/editpesan/${messageId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -1177,7 +1202,7 @@ async function editMessage(messageId) {
     }
 
     // Kirim update ke server
-    const resUpdate = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/updatepesan/${messageId}`, {
+    const resUpdate = await fetch(`http://localhost:3000/api/updatepesan/${messageId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -1202,7 +1227,7 @@ async function editMessage(messageId) {
 async function editMessageGrup(messageId) {
   try {
     // Ambil pesan lama
-    const resGet = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/editpesangrup/${messageId}`, {
+    const resGet = await fetch(`http://localhost:3000/api/editpesangrup/${messageId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -1218,7 +1243,7 @@ async function editMessageGrup(messageId) {
     }
 
     // Kirim update ke server
-    const resUpdate = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/updatepesangrup/${messageId}`, {
+    const resUpdate = await fetch(`http://localhost:3000/api/updatepesangrup/${messageId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -1273,7 +1298,7 @@ async function sendMessageGrup() {
     }
 
   try {
-    const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/grup/${grupId}/send`, {
+    const response = await fetch(`http://localhost:3000/api/grup/${grupId}/send`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`

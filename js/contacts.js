@@ -964,71 +964,101 @@ async function loadMessagesGrup() {
     });
 
     if (!response.ok) {
-      window.location.href = 'login.html?error=unauthorized';
+      if (response.status === 401) window.location.href = 'login.html';
       return;
     }
 
-    const messages = await response.json();
+    const data = await response.json(); 
+    const messages = data.messages; // Array pesan hasil mapping backend
+    const myRole = data.role;       // 'admin' atau 'member'
+
     const isipesan = document.getElementById('messages');
     const namachat = document.getElementById('chat-name');
 
-    // 1. Render Header (Cukup sekali di luar loop)
-    // Gunakan lawanChat (nama grup) yang sudah tersimpan saat klik sidebar
+    // 1. Render Header (Nama Grup + Role + Tombol Add Member)
+    const badgeColor = myRole === 'admin' ? 'bg-danger' : 'bg-secondary';
+    let tombolAdd = '';
+    
+    if (myRole === 'admin') {
+      tombolAdd = `
+        <button id="btn_add_member" class="btn btn-sm btn-success shadow-sm">
+          <i class="bi bi-person-plus-fill"></i> Add Member
+        </button>`;
+    }
+
     namachat.innerHTML = `
       <div class="d-flex justify-content-between align-items-center w-100">
         <div>
-          <span class="fw-bold">#${lawanChat}</span>
-          <div class="contact-status small">
-            <span class="status-indicator online"></span> online
-          </div>
+          <span class="fw-bold fs-5">#${lawanChat}</span>
+          <span class="badge ${badgeColor} ms-1" style="font-size: 10px; vertical-align: middle;">
+            ${myRole.toUpperCase()}
+          </span>
         </div>
-        <button id="btn_add_member" class="btn btn-sm btn-success">
-          <i class="bi bi-person-plus"></i> Add Member
-        </button>
+        ${tombolAdd}
       </div>
     `;
 
-    // 2. Pasang Listener Tombol Add Member
-    document.getElementById('btn_add_member').addEventListener('click', () => {
-      showAddMember(grupId, lawanChat);
-    });
-
-    // 3. Render Pesan
-    isipesan.innerHTML = ''; // Kosongkan dulu sebelum isi baru
-    
-    if (messages.length === 0) {
-      isipesan.innerHTML = '<div class="text-center text-muted my-5">Belum ada pesan di grup ini.</div>';
-    } else {
-      messages.forEach(p => {
-        const isSent = p.sender.id === currentUserId;
-        const kelas = isSent ? 'message sent' : 'message received';
-        const username = p.sender.username || 'Anonim';
-        
-        const tombolEdit = isSent ? `<button class="btn btn-sm btn-link text-primary p-0 me-1" onclick="editMessageGrup(${p.messageId})"><i class="bi bi-pencil"></i></button>` : '';
-        const tombolHapus = isSent ? `<button class="btn btn-sm btn-link text-danger p-0" onclick="deleteMessageGrup(${p.messageId})"><i class="bi bi-trash"></i></button>` : '';
-
-        const pesan = `
-          <div class="${kelas}">
-            <div class="message-content">
-              <small class="d-block fw-bold">${username}</small>
-              ${renderContent(p.content)}
-              <div class="mt-1">${tombolEdit} ${tombolHapus}</div>
-            </div>
-            <div class="message-time">${new Date(p.timestamp).toLocaleTimeString()}</div>
-          </div>
-        `;
-        isipesan.insertAdjacentHTML('beforeend', pesan);
+    // Pasang listener jika tombol render (untuk admin)
+    if (myRole === 'admin') {
+      document.getElementById('btn_add_member').addEventListener('click', () => {
+        showAddMember(grupId, lawanChat);
       });
     }
 
-    // Auto-scroll ke bawah
+    // 2. Render Daftar Pesan
+    isipesan.innerHTML = ''; 
+    
+    if (!messages || messages.length === 0) {
+      isipesan.innerHTML = `
+        <div class="text-center text-muted my-5">
+          <i class="bi bi-chat-dots fs-1 d-block mb-2"></i>
+          Belum ada pesan di grup ini.
+        </div>`;
+    } else {
+      messages.forEach(p => {
+        // PENTING: Gunakan p.sender.id karena di backend kamu bungkus dalam objek sender
+        const isSent = p.sender.id === currentUserId; 
+        const kelas = isSent ? 'message sent' : 'message received';
+        
+        // PENTING: Gunakan p.sender.username agar tidak jadi "Anonim"
+        const username = p.sender.username || 'User';
+        
+        // Tombol Edit/Hapus (Hanya muncul jika pesan milik sendiri)
+        const tombolEdit = isSent ? `
+          <button class="btn btn-sm btn-link text-primary p-0 me-1" onclick="editMessageGrup(${p.messageId})">
+            <i class="bi bi-pencil-square"></i>
+          </button>` : '';
+          
+        const tombolHapus = isSent ? `
+          <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteMessageGrup(${p.messageId})">
+            <i class="bi bi-trash3"></i>
+          </button>` : '';
+
+        const pesanHtml = `
+          <div class="${kelas}">
+            <div class="message-content shadow-sm">
+              <small class="d-block fw-bold text-info" style="font-size: 11px; margin-bottom: 2px;">
+                ${username}
+              </small>
+              ${renderContent(p.content)}
+              <div class="text-end mt-1" style="min-width: 40px;">
+                ${tombolEdit} ${tombolHapus}
+              </div>
+            </div>
+            <div class="message-time">${new Date(p.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+          </div>
+        `;
+        isipesan.insertAdjacentHTML('beforeend', pesanHtml);
+      });
+    }
+
+    // Auto-scroll ke pesan paling bawah
     isipesan.scrollTop = isipesan.scrollHeight;
 
   } catch (error) {
     console.error('Gagal memuat pesan:', error);
   }
 }
-
 // Fungsi untuk memunculkan input tambah member
 function showAddMember(groupId, groupName) {
 

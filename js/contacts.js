@@ -511,6 +511,23 @@ function bukaGrup(idGrup) {
   loadMessagesGrup(idGrup); // Ambil history chat
 }
 
+// Letakkan ini di luar fungsi manapun agar selalu aktif
+socket.on("newGroupAssigned", (data) => {
+  console.log("Sinyal grup baru diterima:", data);
+  
+  // 1. Refresh daftar chat/kontak di sidebar agar grup baru muncul
+  if (typeof loadAllChatList === 'function') {
+      loadAllChatList();
+  }
+
+  // 2. Tampilkan notifikasi (opsional)
+  if (typeof showAlert === 'function') {
+      showAlert(data.message);
+  } else {
+      alert(data.message);
+  }
+});
+
 socket.on("newGroupMessage", (data) => {
   console.log("Ada pesan grup baru masuk:", data);
 
@@ -1037,6 +1054,58 @@ function hideAddMember() {
   const section = document.getElementById('add-member-section');
   if (section) section.style.display = 'none';
 }
+
+// Listener untuk input pencarian
+document.getElementById('search-username').addEventListener('input', async (e) => {
+  const query = e.target.value;
+  const resultsContainer = document.getElementById('search-results');
+  const btnSubmit = document.getElementById('btn-submit-member');
+  const targetIdInput = document.getElementById('target-user-id');
+
+  // Kosongkan dan matikan tombol jika input kosong
+  if (query.length < 2) {
+      resultsContainer.innerHTML = '';
+      btnSubmit.disabled = true;
+      targetIdInput.value = '';
+      return;
+  }
+
+  try {
+      console.log("Mencari user:", query); // Debugging
+      const response = await fetch(`http://localhost:3000/api/usersgrup/search?username=${query}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      const users = await response.json();
+      console.log("Hasil pencarian:", users); // Debugging
+
+      resultsContainer.innerHTML = '';
+
+      if (users.length === 0) {
+          resultsContainer.innerHTML = '<div class="list-group-item small text-muted">User tidak ditemukan</div>';
+          return;
+      }
+
+      users.forEach(user => {
+          const item = document.createElement('button');
+          item.className = 'list-group-item list-group-item-action small py-2';
+          item.type = 'button';
+          item.innerHTML = `<i class="bi bi-person"></i> ${user.username}`;
+          
+          item.onclick = () => {
+              // Saat nama dipilih
+              targetIdInput.value = user.user_id;
+              document.getElementById('search-username').value = user.username;
+              resultsContainer.innerHTML = ''; // Tutup dropdown
+              btnSubmit.disabled = false; // Aktifkan tombol Tambahkan
+              console.log("User dipilih ID:", user.user_id);
+          };
+          resultsContainer.appendChild(item);
+      });
+  } catch (err) {
+      console.error("Error saat mencari user:", err);
+  }
+});
 async function submitAddMember() {
   const section = document.getElementById('add-member-section');
   const groupId = section.dataset.activeGroupId;

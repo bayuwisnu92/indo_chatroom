@@ -9,7 +9,7 @@ form.addEventListener('submit', async (e) => {
         const email = form.querySelector('#email').value; // Ambil nilai email
         const password = form.querySelector('#password').value; // Ambil nilai password
 
-        const response = await fetch('https://east-clone-stream-sympathy.trycloudflare.com/auth/login', {
+        const response = await fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/auth/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json' // << PENTING!

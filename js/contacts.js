@@ -32,7 +32,7 @@ if (!token) {
 // Fungsi verifikasi token
 async function verifyToken(token) {
   try {
-    const response = await fetch('https://east-clone-stream-sympathy.trycloudflare.com/api/verify-token', {
+    const response = await fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/api/verify-token', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -72,7 +72,7 @@ function loadProtectedContent(userData) {
     
       document.getElementById('logout').addEventListener('click', async () => {
         try{
-          const response = await fetch('https://east-clone-stream-sympathy.trycloudflare.com/api/logout', {
+          const response = await fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/api/logout', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -102,7 +102,7 @@ function loadProtectedContent(userData) {
 
 async function logoutOnline(){
   try{
-    const response = await fetch('https://east-clone-stream-sympathy.trycloudflare.com/api/logout', {
+    const response = await fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/api/logout', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -123,10 +123,10 @@ async function logoutOnline(){
 async function loadAllChatList() {
   try {
     const [contactRes, groupRes] = await Promise.all([
-      fetch('https://east-clone-stream-sympathy.trycloudflare.com/api/contacts', {
+      fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/api/contacts', {
         headers: { 'Authorization': `Bearer ${token}` }
       }),
-      fetch('https://east-clone-stream-sympathy.trycloudflare.com/api/allGroup', {
+      fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/api/allGroup', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
     ]);
@@ -228,7 +228,7 @@ async function startChat(datanya) {
       throw new Error('ID kontak tidak valid');
     }
 
-    const response = await fetch('https://east-clone-stream-sympathy.trycloudflare.com/api/conversations/start', {
+    const response = await fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/api/conversations/start', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -282,7 +282,7 @@ pencarian.addEventListener("input", function () {
 
     try {
 
-      const res = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/users/search?q=${keyword}`, {
+      const res = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/users/search?q=${keyword}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -314,7 +314,7 @@ function listContact(combinedList) {
     // AMBIL DATA PESAN
     const rawContent = item.lastMessage || '';
     const hasImageUrl = item.imageUrl && item.imageUrl !== 'null';
-    const isImageFormatLama = rawContent.includes('https://east-clone-stream-sympathy.trycloudflare.com/uploads/');
+    const isImageFormatLama = rawContent.includes('https://projects-cherry-liabilities-dan.trycloudflare.com/uploads/');
     const isImageFormatBaru = item.messageType === 'image';
 
     let displayMsg = '';
@@ -404,7 +404,7 @@ formGroup.addEventListener('submit', async (e) => {
       return;
     }
 
-    const response = await fetch('https://east-clone-stream-sympathy.trycloudflare.com/api/newGroup', {
+    const response = await fetch('https://projects-cherry-liabilities-dan.trycloudflare.com/api/newGroup', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -467,7 +467,7 @@ const lawanChat =urlParams.get('username');
 
 const grupId = urlParams.get('grupId')
 
-const socket = io("https://east-clone-stream-sympathy.trycloudflare.com", {
+const socket = io("https://projects-cherry-liabilities-dan.trycloudflare.com", {
   auth: {
     token: token
   }
@@ -623,7 +623,7 @@ async function sendMessage() {
 
     try {
 
-      const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/${conversationId}/send`, {
+      const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/${conversationId}/send`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -661,7 +661,7 @@ function appendMessage(message) {
   // Jika pesan mengandung image (dari socket biasanya membawa imageUrl atau messageType)
   if (message.messageType === 'image' || message.imageUrl) {
     bodyHtml = `
-      <img src="https://east-clone-stream-sympathy.trycloudflare.com/uploads/${message.imageUrl}" class="chat-image mb-2" style="max-width: 200px; border-radius: 8px;">
+      <img src="https://projects-cherry-liabilities-dan.trycloudflare.com/uploads/${message.imageUrl}" class="chat-image mb-2" style="max-width: 200px; border-radius: 8px;">
       ${message.content ? `<p class="mb-0">${renderContent(message.content)}</p>` : ''}`;
   } else {
     bodyHtml = renderContent(message.content || message.message_text);
@@ -802,7 +802,7 @@ let lawanChatId = null;
 async function loadMessages() {
   socket.emit("joinConversation", conversationId);
   try {
-    const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/${conversationId}/messages`, {
+    const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/${conversationId}/messages`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
@@ -846,7 +846,7 @@ messages.forEach(p => {
   if (p.messageType === 'image' && p.imageUrl) {
     bodyPesan = `
       <div class="chat-image-container">
-        <img src="https://east-clone-stream-sympathy.trycloudflare.com/uploads/${p.imageUrl}" 
+        <img src="https://projects-cherry-liabilities-dan.trycloudflare.com/uploads/${p.imageUrl}" 
              alt="image" 
              class="chat-image img-fluid" 
              style="max-width: 200px; border-radius: 8px; cursor: pointer; display: block;"
@@ -895,7 +895,7 @@ function renderContent(content) {
 
 async function loadMessagesGrup() {
   try {
-    const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/grup/${grupId}/messages`, {
+    const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/grup/${grupId}/messages`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
@@ -1036,7 +1036,7 @@ document.getElementById('search-username').addEventListener('input', async (e) =
 
   try {
       console.log("Mencari user:", query); // Debugging
-      const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/usersgrup/search?username=${query}`, {
+      const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/usersgrup/search?username=${query}`, {
           headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -1080,7 +1080,7 @@ async function submitAddMember() {
   }
 
   try {
-      const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/grup/${groupId}/add-member`, {
+      const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/grup/${groupId}/add-member`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -1114,7 +1114,7 @@ async function deleteMessage(messageId) {
   if (!konfirmasi) return; // Kalau user batal, jangan lanjut
 
   try {
-    const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/hapuspesan/${messageId}`, {
+    const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/hapuspesan/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -1139,7 +1139,7 @@ async function deleteMessageGrup(messageId) {
   if (!konfirmasi) return; // Kalau user batal, jangan lanjut
 
   try {
-    const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/delete/grup/${messageId}`, {
+    const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/delete/grup/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -1161,7 +1161,7 @@ async function deleteMessageGrup(messageId) {
 async function editMessage(messageId) {
   try {
     // Ambil pesan lama
-    const resGet = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/editpesan/${messageId}`, {
+    const resGet = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/editpesan/${messageId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -1177,7 +1177,7 @@ async function editMessage(messageId) {
     }
 
     // Kirim update ke server
-    const resUpdate = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/updatepesan/${messageId}`, {
+    const resUpdate = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/updatepesan/${messageId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -1202,7 +1202,7 @@ async function editMessage(messageId) {
 async function editMessageGrup(messageId) {
   try {
     // Ambil pesan lama
-    const resGet = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/editpesangrup/${messageId}`, {
+    const resGet = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/editpesangrup/${messageId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -1218,7 +1218,7 @@ async function editMessageGrup(messageId) {
     }
 
     // Kirim update ke server
-    const resUpdate = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/updatepesangrup/${messageId}`, {
+    const resUpdate = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/updatepesangrup/${messageId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -1273,7 +1273,7 @@ async function sendMessageGrup() {
     }
 
   try {
-    const response = await fetch(`https://east-clone-stream-sympathy.trycloudflare.com/api/grup/${grupId}/send`, {
+    const response = await fetch(`https://projects-cherry-liabilities-dan.trycloudflare.com/api/grup/${grupId}/send`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`

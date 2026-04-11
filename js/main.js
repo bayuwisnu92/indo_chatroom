@@ -7,13 +7,13 @@ import { loadAllChatList, startChat } from "./contacts.js";
 window.startChat = startChat;
 import { initSocket } from "./socket.js";
 
-import { initSearch } from "./search.js";
+import { initSearch, carikontak, submitAddMember } from "./search.js";
 import { loadMessages, loadMessagesGrup, appendMessage, updateContactRealtime } from "./chat.js";
 
 
 let currentUserId = null;
 let currentGrupId = null;
-let useridnya = null;
+
 
 
 
@@ -24,27 +24,33 @@ const lawanChat =urlParams.get('username');
 
 export const grupId = urlParams.get('grupId')
 export const token = localStorage.getItem("token");
-
-verifyToken(token)
-  .then(userData => {
-    const user = userData.user || {};
-      currentUserId = user.user_id || user.id || decodeToken(token); // fallback terakhir
-    console.log(currentUserId)
-      // Validasi user ID
-      if (!currentUserId) {
-        throw new Error("User ID tidak ditemukan di token atau respons");
-      }
-      useridnya = currentUserId;
-      loadProtectedContent(userData);
-      loadMessages(conversationId, token, currentUserId, socket);
-      loadMessagesGrup(grupId, token, currentUserId, lawanChat);
-      appendMessage(message, currentUserId);
-      updateContactRealtime(message, currentUserId);
-  })
-  .catch(err => {
-    console.error(err);
-  });
+if(!token){
+  window.location.href = 'login.html';
+}else{
+  verifyToken(token)
+    .then(userData => {
+      const user = userData.user || {};
+        currentUserId = user.user_id || user.id || decodeToken(token); // fallback terakhir
+      console.log(currentUserId)
+        // Validasi user ID
+        if (!currentUserId) {
+          throw new Error("User ID tidak ditemukan di token atau respons");
+        }
+        
+        loadProtectedContent(userData);
+        loadMessages(conversationId, token, currentUserId, socket);
+        loadMessagesGrup(grupId, token, currentUserId, lawanChat);
+        appendMessage(message, currentUserId);
+        updateContactRealtime(message, currentUserId);
+    })
+    .catch(err => {
+      console.error(err);
+    });
+}
   initSearch(token);
+  carikontak(token)
+  document.getElementById('btn-submit-member')
+  .addEventListener('click', () => submitAddMember(token));
   function loadProtectedContent(userData) {
     try {
       // 1. Debug: Tampilkan isi lengkap userData
@@ -58,8 +64,13 @@ verifyToken(token)
       document.title = `Chat App - ${username}`; // ⬅️ Tambahkan ini
       // 3. Update DOM
       const homeElement = document.getElementById('home');
+      console.log(homeElement)
+      const chatNameElement = document.getElementById('chat-name');
       if (homeElement) {
         homeElement.textContent = `${username} (ID: ${userId})`;
+      }
+      if (chatNameElement) {
+        chatNameElement.textContent = `#${lawanChat}`;
       }
   
     

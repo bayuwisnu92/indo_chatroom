@@ -70,7 +70,12 @@
       
         <!-- ADD MEMBER -->
         <div id="add-member-section" style="display: none;">
-          <!-- isi tetap -->
+          <h6>Tambah Member</h6>
+          <input type="text" class="form-control" placeholder="Cari kontak" id="search-username">
+          <div id="search-results"></div>
+          <input type="hidden" id="target-user-id" value="">
+          <button class="btn btn-sm btn-primary" id="btn-submit-member">Tambah</button>
+          <button class="btn btn-sm btn-secondary" onclick="this.parentElement.style.display='none'">Batal</button>
         </div>
       
         <!-- MESSAGES -->

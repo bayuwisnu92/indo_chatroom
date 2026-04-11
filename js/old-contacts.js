@@ -999,7 +999,7 @@ document.getElementById('search-username').addEventListener('input', async (e) =
   }
 });
 async function submitAddMember() {
-  const section = document.getElementById('add-member-section');
+  const section = document.getElementById('btn-submit-member');
   const groupId = section.dataset.activeGroupId;
   const targetUserId = document.getElementById('target-user-id').value;
 

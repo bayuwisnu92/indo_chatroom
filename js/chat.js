@@ -6,6 +6,9 @@ import { showAlert } from "./utils.js";
 
 export async function loadMessages(conversationId, token, currentUserId, socket) {
     socket.emit("joinConversation", conversationId);
+    if (!conversationId || isNaN(conversationId)) {
+      return; // ⛔ STOP kalau invalid
+    }
     try {
       const response = await fetch(`http://localhost:3000/api/${conversationId}/messages`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -94,6 +97,10 @@ const pesanHtml = `
   
   
   export async function loadMessagesGrup(grupId, token, currentUserId, lawanChat) {
+    if (!grupId || isNaN(grupId)) {
+      return; // ⛔ STOP
+    }
+    
     try {
       const response = await fetch(`http://localhost:3000/api/grup/${grupId}/messages`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -239,12 +246,14 @@ const pesanHtml = `
 
   // bagian kirim pesannya 
 
-  document.getElementById('chat-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    sendMessage(conversationId, grupId, token);
-  });
+  export function initChatHandlers(conversationId, grupId, token, currentUserId, lawanChat) {
+    document.getElementById('chat-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      sendMessage(conversationId, grupId, token, currentUserId, lawanChat);
+    });
+  }
   
-  async function sendMessage(conversationId, grupId, token) {
+  async function sendMessage(conversationId, grupId, token, currentUserId, lawanChat) {
   
     const messageInput = document.getElementById('message-input');
     const fileInput = document.getElementById('file-input');
@@ -263,7 +272,7 @@ const pesanHtml = `
   
     if (grupId) {
   
-      await sendMessageGrup(grupId, token);
+      await sendMessageGrup(grupId, token, currentUserId, lawanChat);
   
     } else if (conversationId) {
   
@@ -331,38 +340,38 @@ const pesanHtml = `
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
-  async function sendMessageGrup(grupId, token, ) {
-    const messageInput = document.getElementById('message-input');
-    const content = messageInput.value.trim();
-    const file = document.getElementById('file-input').files[0];
-    if (!content && !file) return;
-    const formData = new FormData();
-    formData.append('content', content);
-    if (file) {
-    formData.append('image', file);
-  }
+  async function sendMessageGrup(grupId, token, currentUserId, lawanChat) {
+        const messageInput = document.getElementById('message-input');
+        const content = messageInput.value.trim();
+        const file = document.getElementById('file-input').files[0];
+        if (!content && !file) return;
+        const formData = new FormData();
+        formData.append('content', content);
+        if (file) {
+        formData.append('image', file);
+      }
 
-try {
-  const response = await fetch(`http://localhost:3000/api/grup/${grupId}/send`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    },
-    body: formData
-  });
-  
-  if (response.ok) {
-    messageInput.value = '';
-    loadMessagesGrup(grupId, token, currentUserId, lawanChat);
-    
-    console.log(`berhasil mengirim pesan`)
-  } else {
-    showAlert(`Gagal mengirim pesan!`);
-  }
-} catch (error) {
-  console.error('Error:', error.message);
-  showAlert(`Gagal mengirim pesan. Silakan coba lagi. ${error.message}`);
-}
+    try {
+      const response = await fetch(`http://localhost:3000/api/grup/${grupId}/send`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      if (response.ok) {
+        messageInput.value = '';
+        loadMessagesGrup(grupId, token, currentUserId, lawanChat);
+        
+        console.log(`berhasil mengirim pesan`)
+      } else {
+        showAlert(`Gagal mengirim pesan!`);
+      }
+    } catch (error) {
+      console.error('Error:', error.message);
+      showAlert(`Gagal mengirim pesan. Silakan coba lagi. ${error.message}`);
+    }
 }
 
 export function updateContactRealtime(message, currentUserId) {

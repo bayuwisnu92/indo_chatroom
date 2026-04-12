@@ -8,7 +8,7 @@ window.startChat = startChat;
 import { initSocket } from "./socket.js";
 
 import { initSearch, carikontak, submitAddMember } from "./search.js";
-import { loadMessages, loadMessagesGrup, appendMessage, updateContactRealtime } from "./chat.js";
+import { loadMessages, loadMessagesGrup, appendMessage, updateContactRealtime, initChatHandlers  } from "./chat.js";
 
 
 let currentUserId = null;
@@ -38,10 +38,65 @@ if(!token){
         }
         
         loadProtectedContent(userData);
-        loadMessages(conversationId, token, currentUserId, socket);
-        loadMessagesGrup(grupId, token, currentUserId, lawanChat);
-        appendMessage(message, currentUserId);
-        updateContactRealtime(message, currentUserId);
+        initChatHandlers(conversationId, grupId, token, currentUserId, lawanChat);
+        const socket = initSocket(token, currentUserId, {
+
+          conversationId,
+          grupId,
+        
+          onNewMessage: (message) => {
+            appendMessage(message, currentUserId);
+            updateContactRealtime(message, currentUserId);
+            
+          },
+        
+          onGroupMessage: (data) => {
+            appendMessage(data, currentUserId);
+          },
+          onUpdateContact: (data) => {
+              updateContactRealtime(data, currentUserId);
+            },
+        
+          onRefreshContact: () => {
+            loadAllChatList(token);
+          },
+        
+          onNewGroup: (data) => {
+            showAlert(data.message);
+            loadAllChatList(token);
+          }
+        
+        });
+      
+        if (conversationId && !isNaN(conversationId)) {
+      
+          document.querySelector('.chat-container').style.display = 'block';
+          loadMessages(conversationId, token, currentUserId, socket);
+        
+          if (window.innerWidth <= 768) {
+            document.getElementById('kontak').style.display = 'none';
+          }
+        
+        } else if (grupId && !isNaN(grupId)) {
+        
+          document.querySelector('.chat-container').style.display = 'block';
+          loadMessagesGrup(grupId, token, currentUserId, lawanChat);
+        
+          if (window.innerWidth <= 768) {
+            document.getElementById('kontak').style.display = 'none';
+          }
+        
+        } else {
+        
+          document.querySelector('.chat-container').style.display = 'none';
+        
+          const pesanKosong = document.getElementById('pesanBelumada');
+          if (pesanKosong) {
+            pesanKosong.innerHTML = `
+              <i class="bi bi-chat-dots"></i> <span>Silahkan pilih orang untuk chat</span>`;
+          }
+        
+        }
     })
     .catch(err => {
       console.error(err);
@@ -53,10 +108,6 @@ if(!token){
   .addEventListener('click', () => submitAddMember(token));
   function loadProtectedContent(userData) {
     try {
-      // 1. Debug: Tampilkan isi lengkap userData
-      // console.log('Parsed user data:', JSON.parse(JSON.stringify(userData)));
-      
-      // 2. Akses data dengan benar
       
       const user = userData.user || {};
       const username = user.username || 'Guest';
@@ -105,56 +156,6 @@ if(!token){
   }
 
   loadAllChatList(token);
-//   startChat({ otherUserId: currentUserId, username: lawanChat });
 
-  const socket = initSocket(token, currentUserId, {
 
-    conversationId,
-    grupId,
   
-    onNewMessage: (message) => {
-      appendMessage(message, currentUserId);
-      updateContactRealtime(message, currentUserId);
-      
-    },
-  
-    onGroupMessage: (data) => {
-      appendMessage(data, currentUserId);
-    },
-    onUpdateContact: (data) => {
-        updateContactRealtime(data, currentUserId);
-      },
-  
-    onRefreshContact: () => {
-      loadAllChatList(token);
-    },
-  
-    onNewGroup: (data) => {
-      showAlert(data.message);
-      loadAllChatList(token);
-    }
-  
-  });
-
-  if (conversationId && !isNaN(conversationId)) {
-    document.querySelector('.chat-container').style.display = 'block';
-    loadMessages(conversationId, token, currentUserId, socket);
-  
-    // Hanya sembunyikan kontak jika di layar kecil (max-width: 768px)
-    if (window.innerWidth <= 768) {
-      document.getElementById('kontak').style.display = 'none';
-    }
-  
-  } else if (grupId && !isNaN(grupId)) {
-    document.querySelector('.chat-container').style.display = 'block';
-    loadMessagesGrup(grupId, token, currentUserId, lawanChat);
-  
-    if (window.innerWidth <= 768) {
-      document.getElementById('kontak').style.display = 'none';
-    }
-  
-  } else {
-    document.querySelector('.chat-container').style.display = 'none';
-    document.getElementById('pesanBelumada').innerHTML = `
-      <i class="bi bi-chat-dots"></i> <span>Silahkan pilih orang untuk chat</span>`;
-  }

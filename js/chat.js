@@ -1,7 +1,14 @@
 
 import { renderContent } from "./utils.js";
-import { conversationId, grupId, token } from "./main.js";
+// import { conversationId, grupId, token } from "./main.js";
 import { showAlert } from "./utils.js";
+import { loadAllChatList } from "./contacts.js";
+const token = localStorage.getItem('token')
+const urlParams = new URLSearchParams(window.location.search);
+const gambarprofile = urlParams.get('image'); 
+
+// Sekarang kamu bisa pakai variabel 'gambarprofile' tanpa error
+
 
 
 export async function loadMessages(conversationId, token, currentUserId, socket) {
@@ -25,19 +32,28 @@ export async function loadMessages(conversationId, token, currentUserId, socket)
   
       const isipesan = document.getElementById('messages');
       const namachat = document.getElementById('chat-name');
-  
+      
       isipesan.innerHTML = '';
   
       // Render Header
       const statusnya = lawanChat.status === 'online' ? 'online' : 'offline';
       namachat.innerHTML = `
-        <div class="chat-header">
-          <strong>#${lawanChat.username || 'Lawan Chat'}</strong>
-          <div class="contact-status">
-            <span class="status-indicator ${statusnya}"></span>
-            <span class="status-text">${statusnya}</span>
-          </div>
-        </div>`;
+  <div class="chat-header-content d-flex align-items-center">
+    <div class="header-avatar-wrapper position-relative">
+      <img src="http://localhost:3000/uploads/profile/${gambarprofile}" 
+           onerror="this.src='https://via.placeholder.com/40'" 
+           alt="Foto" 
+           class="header-profile-image" width='40' height='40'>
+      <span class="status-indicator-dot ${statusnya}"></span>
+    </div>
+
+    <div class="header-info-wrapper ms-3">
+      <h6 class="mb-0 chat-user-name">${lawanChat.username || 'Lawan Chat'}</h6>
+      <div class="status-detail">
+        <span class="status-text-small">${statusnya}</span>
+      </div>
+    </div>
+  </div>`;
   
       // ... kode header tetap sama ...
   
@@ -322,6 +338,9 @@ const pesanHtml = `
     } else {
       bodyHtml = renderContent(message.content || message.message_text);
     }
+    const tombolHapus = isSent ? `<button class="btn btn-sm btn-outline-danger border-0" onclick="deleteMessage(${message.messageId})"><i class="bi bi-trash"></i></button>` : '';
+    const tombolEdit = (isSent && message.messageType === 'text') ? `<button class="btn btn-sm btn-outline-primary border-0" onclick="editMessage(${message.messageId}, ${token})"><i class="bi bi-pencil"></i></button>` : '';
+  
   
     const div = document.createElement("div");
     div.className = kelas;
@@ -332,6 +351,9 @@ const pesanHtml = `
         <small class="d-block fw-bold mb-1">${username}</small>
         ${bodyHtml}
         <span class="new-message-badge" style="font-size: 9px; color: #dc3545;">baru</span>
+        <div class="message-actions">
+          ${tombolEdit} ${tombolHapus}
+        </div>
       </div>
       <div class="message-time">${new Date(message.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
     `;
@@ -365,9 +387,7 @@ const pesanHtml = `
         loadMessagesGrup(grupId, token, currentUserId, lawanChat);
         
         console.log(`berhasil mengirim pesan`)
-      } else {
-        showAlert(`Gagal mengirim pesan!`);
-      }
+      } 
     } catch (error) {
       console.error('Error:', error.message);
       showAlert(`Gagal mengirim pesan. Silakan coba lagi. ${error.message}`);
@@ -416,4 +436,79 @@ export function updateContactRealtime(message, currentUserId) {
     } else {
       loadAllChatList();
     }
+  }
+
+
+  export async function deleteMessage(messageId) {
+    
+    const token = localStorage.getItem("token"); 
+  
+    const konfirmasi = confirm('Yakin ingin menghapus pesan ini?');
+  
+    if (!konfirmasi) return; // Kalau user batal, jangan lanjut
+  
+    try {
+      const response = await fetch(`http://localhost:3000/api/hapuspesan/${messageId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+  
+      if (response.ok) {
+        
+        loadAllChatList(token);
+      } else {
+        alert('Gagal menghapus pesan!');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Gagal menghapus pesan. Silakan coba lagi.');
+    }
+  }
+  window.deleteMessage = deleteMessage;
+
+  export function buatgrup(){
+
+    const formGroup = document.getElementById('formGroup');
+  formGroup.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    try {
+      const nameInput = document.getElementById('name'); // Pastikan ID-nya ada di HTML
+      const name = nameInput.value;
+  
+      // Validasi input
+      if (!name.trim()) {
+        showAlert('Nama grup tidak boleh kosong', 'danger');
+        return;
+      }
+  
+      const response = await fetch('http://localhost:3000/api/newGroup', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json' // ✅ Penting!
+        },
+        body: JSON.stringify({ name: name })
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const json = await response.json();
+      
+      if (json.status === 'success') {
+        showAlert('Grup berhasil dibuat', 'success');
+        loadAllChatList(token)
+        formGroup.reset();
+      } else {
+        showAlert(json.message || 'Grup gagal dibuat', 'danger'); // Tampilkan pesan error dari server
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showAlert('Terjadi kesalahan saat membuat grup', 'danger');
+    }
+  });
   }

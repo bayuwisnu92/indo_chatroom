@@ -8,18 +8,30 @@ window.startChat = startChat;
 import { initSocket } from "./socket.js";
 
 import { initSearch, carikontak, submitAddMember } from "./search.js";
-import { loadMessages, loadMessagesGrup, appendMessage, updateContactRealtime, initChatHandlers  } from "./chat.js";
+import { loadMessages, loadMessagesGrup, appendMessage, updateContactRealtime, initChatHandlers, buatgrup  } from "./chat.js";
+import { updateProfile } from "./profile.js";
 
 
 let currentUserId = null;
 let currentGrupId = null;
 
+const formPhoto = document.getElementById('formPhoto');
 
+formPhoto.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const formData = new FormData(formPhoto);
+
+  await updateProfile(formData); // tunggu selesai
+
+  formPhoto.reset();
+});
 
 
 const urlParams = new URLSearchParams(window.location.search);
 export const conversationId = urlParams.get('conversationId');
 const lawanChat =urlParams.get('username');
+export const gambarprofile =urlParams.get('image');
 
 
 export const grupId = urlParams.get('grupId')
@@ -104,6 +116,7 @@ if(!token){
 }
   initSearch(token);
   carikontak(token)
+  buatgrup()
   document.getElementById('btn-submit-member')
   .addEventListener('click', () => submitAddMember(token));
   function loadProtectedContent(userData) {
@@ -112,6 +125,8 @@ if(!token){
       const user = userData.user || {};
       const username = user.username || 'Guest';
       const userId = user.id || 'N/A';
+      const photo = user.profil
+      console.log(photo)
       document.title = `Chat App - ${username}`; // ⬅️ Tambahkan ini
       // 3. Update DOM
       const homeElement = document.getElementById('home');
@@ -119,6 +134,10 @@ if(!token){
       const chatNameElement = document.getElementById('chat-name');
       if (homeElement) {
         homeElement.textContent = `${username} (ID: ${userId})`;
+        homeElement.innerHTML = `
+        <img src="http://localhost:3000/uploads/profile/${photo}" alt="Profile" class="rounded-circle me-2" style="width: 30px; height: 30px;">
+        ${username} (ID: ${userId})
+      `;
       }
       if (chatNameElement) {
         chatNameElement.textContent = `#${lawanChat}`;
@@ -156,6 +175,13 @@ if(!token){
   }
 
   loadAllChatList(token);
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker terdaftar!', reg))
+        .catch(err => console.log('Gagal daftar SW', err));
+    });
+  }
 
 
   

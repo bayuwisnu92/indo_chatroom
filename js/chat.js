@@ -41,7 +41,7 @@ export async function loadMessages(conversationId, token, currentUserId, socket)
   <div class="chat-header-content d-flex align-items-center">
     <div class="header-avatar-wrapper position-relative">
       <img src="http://localhost:3000/uploads/profile/${gambarprofile}" 
-           onerror="this.src='https://via.placeholder.com/40'" 
+           onerror="this.src='http://localhost:3000/uploads/profile/none.png'" 
            alt="Foto" 
            class="header-profile-image" width='40' height='40'>
       <span class="status-indicator-dot ${statusnya}"></span>
@@ -154,7 +154,7 @@ const pesanHtml = `
 
       }
       const gambargrup =`<img src="http://localhost:3000/uploads/profile/${gambarprofile}" 
-           onerror="this.src='https://via.placeholder.com/40'" 
+           onerror="this.src='http://localhost:3000/uploads/profile/none.png'" 
            alt="Foto" 
            class="header-profile-image" width='40' height='40'>`
       console.log(`pengen tau ${lawanChat}`)

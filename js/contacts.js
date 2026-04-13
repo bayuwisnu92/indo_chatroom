@@ -263,6 +263,7 @@ export function listContact(combinedList) {
       id: user.user_id,
       name: user.username,
       status: user.status,
+      email: user.email,
       lastMessage: '',
       lastTime: '',
       type: 'user',

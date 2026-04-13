@@ -29,7 +29,7 @@ pencarian.addEventListener("input", async function () {
       const users = await res.json();
 
       const mappedUsers = mapSearchUsers(users);
-
+      console.log(mappedUsers)
       listContact(mappedUsers);
 
     } catch (err) {

@@ -149,12 +149,20 @@ const pesanHtml = `
         tombolAdd = `
           <button id="btn_add_member" class="btn btn-sm btn-success shadow-sm">
             <i class="bi bi-person-plus-fill"></i> Add Member
-          </button>`;
+          </button>
+          `;
+
       }
-  
+      const gambargrup =`<img src="http://localhost:3000/uploads/profile/${gambarprofile}" 
+           onerror="this.src='https://via.placeholder.com/40'" 
+           alt="Foto" 
+           class="header-profile-image" width='40' height='40'>`
+      console.log(`pengen tau ${lawanChat}`)
       namachat.innerHTML = `
         <div class="d-flex justify-content-between align-items-center w-100">
           <div>
+          <span><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#photogrup" style="display:inline-block">
+            ${gambargrup}</a></span>
             <span class="fw-bold fs-5">#${lawanChat}</span>
             <span class="badge ${badgeColor} ms-1" style="font-size: 10px; vertical-align: middle;">
               ${myRole.toUpperCase()}

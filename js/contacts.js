@@ -200,7 +200,7 @@ export function listContact(combinedList) {
               </p>
             </div>
           </div>
-          <button class="btn btn-chat" onClick="window.location.href='contact.html?grupId=${item.id}&username=${item.name}'">
+          <button class="btn btn-chat" onClick="window.location.href='contact.html?grupId=${item.id}&username=${item.name}&image=${pic}'">
             <i class="fas fa-comment-dots"></i> Chat
           </button>
         </div>`;

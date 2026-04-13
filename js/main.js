@@ -9,7 +9,8 @@ import { initSocket } from "./socket.js";
 
 import { initSearch, carikontak, submitAddMember } from "./search.js";
 import { loadMessages, loadMessagesGrup, appendMessage, updateContactRealtime, initChatHandlers, buatgrup  } from "./chat.js";
-import { updateProfile } from "./profile.js";
+import { updateProfile, updateprofilegrup } from "./profile.js";
+
 
 
 let currentUserId = null;
@@ -26,6 +27,8 @@ formPhoto.addEventListener('submit', async (e) => {
 
   formPhoto.reset();
 });
+
+
 
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -184,4 +187,22 @@ if(!token){
   }
 
 
-  
+  const formphotogrup = document.getElementById('formPhotogrup');
+
+formphotogrup.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+
+  const formData = new FormData(formphotogrup);
+
+  for (let [key, value] of formData.entries()) {
+    console.log(key, value); 
+}
+
+  // Jalankan fungsi update
+  await updateprofilegrup(grupId, formData);
+ console.log(grupId)
+ console.log(formData)
+
+  formphotogrup.reset();
+});

@@ -1,7 +1,7 @@
 
 import { renderContent } from "./utils.js";
 // import { conversationId, grupId, token } from "./main.js";
-import { showAlert } from "./utils.js";
+import { showAlert, formatDate } from "./utils.js";
 import { loadAllChatList } from "./contacts.js";
 const token = localStorage.getItem('token')
 const urlParams = new URLSearchParams(window.location.search);
@@ -34,7 +34,9 @@ export async function loadMessages(conversationId, token, currentUserId, socket)
       const namachat = document.getElementById('chat-name');
       
       isipesan.innerHTML = '';
-  
+      const menu = document.getElementById('menu')
+      const blokir = `<li><a class="dropdown-item text-danger" href="#"><i class="fas fa-ban me-2"></i>Blokir</a></li>`;
+menu.insertAdjacentHTML('beforeend', blokir);
       // Render Header
       const statusnya = lawanChat.status === 'online' ? 'online' : 'offline';
       namachat.innerHTML = `
@@ -154,10 +156,33 @@ const pesanHtml = `
           </li>
           <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#photogrup"><i class="fas fa-camera me-2"></i>Ganti Foto Grup</a></li>
         `;
-      
         const menu = document.getElementById('menu');
         menu.insertAdjacentHTML('beforeend', tombolAdd);
       }
+
+      const membergrup = `          <li>
+            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#anggotagrup" id='lihatanggotagrup'>
+              <i class="fas fa-user-plus me-2"></i>lihat anggota grup
+            </a>
+          </li>`
+          const menunya = document.getElementById('menu')
+          menunya.insertAdjacentHTML('beforeend',membergrup)
+
+          // tempat untuk menampung data anggota grup
+  
+  // yang menjadi triger menampilkan anggota grup
+
+  const tombollihatgrup = document.getElementById('lihatanggotagrup');
+
+if (tombollihatgrup) {
+  tombollihatgrup.addEventListener('click', () => {
+    console.log('Tombol ditekan! Aman, nggak ngantuk lagi.');
+
+    manampilkanmember(grupId)
+  });
+} else {
+  console.error('Waduh, tombolnya nggak ketemu! Cek lagi ID-nya di HTML.');
+}
       const gambargrup =`<img src="http://localhost:3000/uploads/profile/${gambarprofile}" 
            onerror="this.src='http://localhost:3000/uploads/profile/none.png'" 
            alt="Foto" 
@@ -166,9 +191,7 @@ const pesanHtml = `
       namachat.innerHTML = `
         <div class="d-flex justify-content-between align-items-center w-100">
           <div>
-          <button class="btn btn-outline-secondary rounded-pill mb-3 d-md-none" onclick="showContacts()">
-            <i class="fas fa-arrow-left me-1"></i> 
-          </button>
+          
           <span><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#photogrup" style="display:inline-block">
             ${gambargrup}</a></span>
             <span class="fw-bold fs-5">#${lawanChat}</span>
@@ -528,3 +551,95 @@ export function updateContactRealtime(message, currentUserId) {
     }
   });
   }
+  async function manampilkanmember(grupId) {
+    const container = document.getElementById('allmembergrup');
+    if (!container) return;
+  
+    // Tampilkan indikator loading
+    container.innerHTML = '<div class="loading">Memuat anggota...</div>';
+  
+    try {
+      const response = await fetch(`http://localhost:3000/api/membergrup/${grupId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+  
+      const { data: members, total: totalMembers } = await response.json();
+      console.log(members)
+  
+      if (!members?.length) {
+        container.innerHTML = '<div class="no-members">Tidak ada anggota ditemukan.</div>';
+        return;
+      }
+  
+      // Bangun tampilan: header jumlah anggota + daftar kartu anggota
+      let html = `
+        <div class="member-header">
+          <p>Jumlah anggota grup: <strong>${totalMembers}</strong></p>
+        </div>
+        <div class="member-list">
+      `;
+  
+      members.forEach(member => {
+        const profilePic = member.profile_picture
+          ? `http://localhost:3000/uploads/profile/${member.profile_picture}`
+          : 'http://localhost:3000/uploads/profile/none.png'; // ganti dengan path default avatar Anda
+  
+        // Logika sederhana: jika selisih waktu kurang dari 5 menit, dianggap Online
+        const isOnline = (new Date() - new Date(member.last_online)) < 5 * 60 * 1000;
+        const statusClass = isOnline ? 'status-online' : 'status-offline';
+        const statusText = isOnline ? 'Online' : `Aktif ${formatDate(member.last_online)}`;
+        
+        html += `
+          <div class="member-card">
+            <div class="member-avatar">
+              <img src="${profilePic}" alt="${escapeHtml(member.username)}" width="45" height="45">
+              <span class="status-indicator ${statusClass}"></span>
+            </div>
+            
+            <div class="member-info">
+              <div class="member-header">
+                <span class="member-username">${escapeHtml(member.username)}</span>
+                <span class="badge-role" style='color:blue; font-size: 10px;'>${escapeHtml(member.role)}</span>
+              </div>
+              <div class="member-last-seen ${statusClass}">${statusText}</div>
+            </div>
+        
+            <div class="member-actions">
+              <button class="btn btn-chat" onClick="startChat({otherUserId: ${member.user_id}, username: '${member.username}', image: '${member.profile_picture}'})">
+                <i class="fas fa-comment-dots"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+  
+      html += `</div>`;
+      container.innerHTML = html;
+  
+    } catch (error) {
+      console.error('Error:', error);
+      container.innerHTML = '<div class="error-message">Gagal memuat anggota. Silakan coba lagi.</div>';
+    }
+  }
+  
+  // Fungsi helper untuk mencegah XSS
+  
+  
+  // Helper function untuk mencegah XSS
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+

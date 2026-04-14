@@ -143,15 +143,20 @@ const pesanHtml = `
   
       // 1. Render Header (Nama Grup + Role + Tombol Add Member)
       const badgeColor = myRole === 'admin' ? 'bg-danger' : 'bg-secondary';
-      let tombolAdd = '';
+      // let tombolAdd = '';
       
       if (myRole === 'admin') {
-        tombolAdd = `
-          <button id="btn_add_member" class="btn btn-sm btn-success shadow-sm">
-            <i class="bi bi-person-plus-fill"></i> Add Member
-          </button>
-          `;
-
+        const tombolAdd = `
+          <li>
+            <a class="dropdown-item" href="#" id="btn_add_member">
+              <i class="fas fa-user-plus me-2"></i>Tambah Member
+            </a>
+          </li>
+          <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#photogrup"><i class="fas fa-camera me-2"></i>Ganti Foto Grup</a></li>
+        `;
+      
+        const menu = document.getElementById('menu');
+        menu.insertAdjacentHTML('beforeend', tombolAdd);
       }
       const gambargrup =`<img src="http://localhost:3000/uploads/profile/${gambarprofile}" 
            onerror="this.src='http://localhost:3000/uploads/profile/none.png'" 
@@ -161,6 +166,9 @@ const pesanHtml = `
       namachat.innerHTML = `
         <div class="d-flex justify-content-between align-items-center w-100">
           <div>
+          <button class="btn btn-outline-secondary rounded-pill mb-3 d-md-none" onclick="showContacts()">
+            <i class="fas fa-arrow-left me-1"></i> 
+          </button>
           <span><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#photogrup" style="display:inline-block">
             ${gambargrup}</a></span>
             <span class="fw-bold fs-5">#${lawanChat}</span>
@@ -168,7 +176,7 @@ const pesanHtml = `
               ${myRole.toUpperCase()}
             </span>
           </div>
-          ${tombolAdd}
+          
         </div>
       `;
   

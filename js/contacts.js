@@ -132,6 +132,7 @@ export function listContact(combinedList) {
     const hasImageUrl = item.imageUrl && item.imageUrl !== 'null';
     const isImageFormatLama = rawContent.includes('http://localhost:3000/uploads/');
     const isImageFormatBaru = item.messageType === 'image';
+    
 
     let displayMsg = '';
     if (isImageFormatBaru || hasImageUrl || isImageFormatLama) {
@@ -157,6 +158,7 @@ export function listContact(combinedList) {
 
     // 3. RENDER HTML USER
     if (item.type === 'user') {
+    
       const status = item.status === 'online' ? 'online' : 'offline';
       return `
         <div class="contact-card" data-user-id="${item.id}" data-conversation-id="${item.conversationId}">
@@ -176,10 +178,13 @@ export function listContact(combinedList) {
               <p class="last-message text-truncate">${displayMsg}</p>
             </div>
           </div>
+          
           <button class="btn btn-chat" onClick="startChat({otherUserId: ${item.id}, username: '${item.name}',image: '${item.profilePicture}'})">
             <i class="fas fa-comment-dots"></i> Chat
           </button>
         </div>`;
+        
+        
     }
 
     // 4. RENDER HTML GROUP

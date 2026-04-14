@@ -23,6 +23,7 @@ export async function updateProfile(file) {
 
         showAlert(data.message);
         loadAllChatList(token);
+        window.location.href = 'contact.html'
 
     } catch (error) {
         console.error('Error:', error.message);

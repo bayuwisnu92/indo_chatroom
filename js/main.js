@@ -5,13 +5,42 @@ import { verifyToken, decodeToken, logoutOnline }
 from "./auth.js";
 import { loadAllChatList, startChat } from "./contacts.js";
 window.startChat = startChat;
+window.showContacts= showContacts;
 import { initSocket } from "./socket.js";
 
 import { initSearch, carikontak, submitAddMember } from "./search.js";
 import { loadMessages, loadMessagesGrup, appendMessage, updateContactRealtime, initChatHandlers, buatgrup  } from "./chat.js";
 import { updateProfile, updateprofilegrup } from "./profile.js";
 
-
+// 在页面加载后执行
+document.addEventListener('DOMContentLoaded', function() {
+  const fabToggle = document.getElementById('fabToggle');
+  const fabMenu = document.getElementById('fabMenu');
+  
+  // 点击主按钮切换菜单
+  fabToggle.addEventListener('click', function(e) {
+    e.stopPropagation();
+    fabMenu.classList.toggle('show');
+  });
+  
+  // 点击页面其他地方关闭菜单
+  document.addEventListener('click', function(e) {
+    if (!fabToggle.contains(e.target) && !fabMenu.contains(e.target)) {
+      fabMenu.classList.remove('show');
+    }
+  });
+  
+  // 点击菜单项后自动关闭（可选）
+  const menuItems = fabMenu.querySelectorAll('.fab-item');
+  menuItems.forEach(item => {
+    item.addEventListener('click', function() {
+      fabMenu.classList.remove('show');
+    });
+  });
+  
+  // 登出功能（保留原逻辑）
+  
+});
 
 let currentUserId = null;
 let currentGrupId = null;
@@ -206,3 +235,8 @@ formphotogrup.addEventListener('submit', async (e) => {
 
   formphotogrup.reset();
 });
+
+function showContacts() {
+  document.getElementById('kontak').style.display = 'block';
+  document.querySelector('.chat-container').style.display = 'none';
+}

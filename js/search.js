@@ -1,4 +1,5 @@
 import {mapSearchUsers, listContact} from "./contacts.js";
+import {dataGlobal} from "./contacts.js"
 
 export function initSearch(token) {
 const pencarian = document.getElementById("pencarian");

@@ -9,8 +9,18 @@ window.showContacts= showContacts;
 import { initSocket } from "./socket.js";
 
 import { initSearch, carikontak, submitAddMember } from "./search.js";
-import { loadMessages, loadMessagesGrup, appendMessage, updateContactRealtime, initChatHandlers, buatgrup  } from "./chat.js";
+import { loadMessages, loadMessagesGrup, appendMessage, updateContactRealtime, initChatHandlers, buatgrup, removeMessageFromUI } from "./chat.js";
 import { updateProfile, updateprofilegrup } from "./profile.js";
+
+// const notificationSound = new Audio('../notifikasi/Jejak_Cinta_Abadi.mp3');
+// function playNotification() {
+//   notificationSound.currentTime = 0; // reset biar bisa bunyi cepat
+//   notificationSound.play().catch(err => {
+//     console.log('Audio gagal:', err);
+//   });
+// }
+// Optional: supaya preload
+
 
 // 在页面加载后执行
 document.addEventListener('DOMContentLoaded', function() {
@@ -83,6 +93,8 @@ if(!token){
         
         loadProtectedContent(userData);
         initChatHandlers(conversationId, grupId, token, currentUserId, lawanChat);
+
+        // bagian socket
         const socket = initSocket(token, currentUserId, {
 
           conversationId,
@@ -90,14 +102,22 @@ if(!token){
         
           onNewMessage: (message) => {
             appendMessage(message, currentUserId);
-            updateContactRealtime(message, currentUserId);
+            
+
+            console.log(message.senderId)
             
           },
         
           onGroupMessage: (data) => {
             appendMessage(data, currentUserId);
-          },
+            console.log(data)
+          },  
           onUpdateContact: (data) => {
+              updateContactRealtime(data, currentUserId);
+              
+            },
+
+            onUpdateGroupContact: (data) => {
               updateContactRealtime(data, currentUserId);
             },
         
@@ -108,7 +128,20 @@ if(!token){
           onNewGroup: (data) => {
             showAlert(data.message);
             loadAllChatList(token);
-          }
+          },
+          onMessageDeleted: ({ messageId }) => {
+            console.log(messageId)
+            const messageElement = document.querySelector(`[data-id="${messageId}"]`);
+
+            if (messageElement) {
+              messageElement.remove(); // hapus dari tampilan
+            }
+          },
+          
+          onGroupMessageDeleted: ({ messageId }) => {
+            removeMessageFromUI(messageId);
+            loadAllChatList(token)
+          },
         
         });
       
@@ -124,7 +157,7 @@ if(!token){
         } else if (grupId && !isNaN(grupId)) {
         
           document.querySelector('.chat-container').style.display = 'block';
-          loadMessagesGrup(grupId, token, currentUserId, lawanChat);
+          loadMessagesGrup(grupId, token, currentUserId, lawanChat, socket);;
         
           if (window.innerWidth <= 768) {
             document.getElementById('kontak').style.display = 'none';

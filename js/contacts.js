@@ -3,7 +3,7 @@
 import { formatDate } from "./utils.js";
 import { showAlert } from "./utils.js";
 
-let dataGlobal = [];
+export let dataGlobal = [];
 let conversationMap = {};
 
 export async function loadAllChatList(token) {

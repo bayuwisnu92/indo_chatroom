@@ -8,15 +8,15 @@ export function initSocket(token, currentUserId, handlers) {
   
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id);
-  
+    
       if (currentUserId) {
         socket.emit("joinPersonalRoom", currentUserId);
       }
-  
-      // if (handlers.conversationId) {
-      //   socket.emit("joinConversation", handlers.conversationId);
-      // }
-  
+    
+      if (handlers.conversationId) {
+        socket.emit("joinConversation", handlers.conversationId);
+      }
+    
       if (handlers.grupId) {
         socket.emit("joinGroup", handlers.grupId);
       }
@@ -55,6 +55,9 @@ export function initSocket(token, currentUserId, handlers) {
   
     });
   
+    socket.on("updateGroupContactList", handlers.onUpdateGroupContact);
+
+    
     // ========================
     // GROUP MESSAGE
     // ========================
@@ -75,6 +78,18 @@ export function initSocket(token, currentUserId, handlers) {
     socket.on("newGroupAssigned", (data) => {
       if (handlers.onNewGroup) {
         handlers.onNewGroup(data);
+      }
+    });
+
+    socket.on("messageDeleted", (data) => {
+      if (handlers.onMessageDeleted) {
+        handlers.onMessageDeleted(data);
+      }
+    });
+    
+    socket.on("groupMessageDeleted", (data) => {
+      if (handlers.onGroupMessageDeleted) {
+        handlers.onGroupMessageDeleted(data);
       }
     });
   

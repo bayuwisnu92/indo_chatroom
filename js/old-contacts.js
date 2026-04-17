@@ -55,10 +55,6 @@ async function verifyToken(token) {
 // Fungsi tampilkan konten
 function loadProtectedContent(userData) {
     try {
-      // 1. Debug: Tampilkan isi lengkap userData
-      // console.log('Parsed user data:', JSON.parse(JSON.stringify(userData)));
-      
-      // 2. Akses data dengan benar
       const user = userData.user || {};
       const username = user.username || 'Guest';
       const userId = user.id || 'N/A';

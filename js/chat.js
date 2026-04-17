@@ -5,7 +5,8 @@ import { showAlert, formatDate } from "./utils.js";
 import { loadAllChatList } from "./contacts.js";
 const token = localStorage.getItem('token')
 const urlParams = new URLSearchParams(window.location.search);
-const gambarprofile = urlParams.get('image'); 
+const gambarprofile = urlParams.get('image');
+const usernamegrup = urlParams.get('username')
 
 // Sekarang kamu bisa pakai variabel 'gambarprofile' tanpa error
 
@@ -64,7 +65,6 @@ menu.insertAdjacentHTML('beforeend', blokir);
     const isSent = String(senderId) === String(currentUserId);
     const kelas = isSent ? 'message sent' : 'message received';
     const username = p.sender.username || 'Anonim';
-    console.log("ID Pengirim:", senderId, "ID Saya:", currentUserId, "Apakah Sama?", String(senderId) === String(currentUserId));
     let bodyPesan = '';
   
     // PERBAIKAN DI SINI: Gunakan messageType dan imageUrl (CamelCase)
@@ -114,7 +114,10 @@ const pesanHtml = `
   
   
   
-  export async function loadMessagesGrup(grupId, token, currentUserId, lawanChat) {
+  export async function loadMessagesGrup(grupId, token, currentUserId, lawanChat, socket) {
+    const chatBox = document.getElementById('messages');
+    chatBox.dataset.groupId = grupId;
+    socket.emit("joinGroup", grupId);
     if (!grupId || isNaN(grupId)) {
       return; // ⛔ STOP
     }
@@ -248,7 +251,7 @@ if (tombollihatgrup) {
         
             // 4. Tombol Aksi
             const tombolEdit = (isSent && !isImage) ? `<button class="btn btn-sm text-primary p-0 me-1" onclick="editMessageGrup(${p.messageId})"><i class="bi bi-pencil-square"></i></button>` : '';
-            const tombolHapus = isSent ? `<button class="btn btn-sm text-danger p-0" onclick="deleteMessageGrup(${p.messageId})"><i class="bi bi-trash3"></i></button>` : '';
+            const tombolHapus = isSent ? `<button class="btn btn-sm text-danger p-0" onclick="deleteMessageGrup(${p.messageId}, ${grupId})"><i class="bi bi-trash3"></i></button>` : '';
         
             // 5. Render ke HTML
             const pesanHtml = `
@@ -423,9 +426,9 @@ if (tombollihatgrup) {
       
       if (response.ok) {
         messageInput.value = '';
-        loadMessagesGrup(grupId, token, currentUserId, lawanChat);
-        
-        console.log(`berhasil mengirim pesan`)
+        document.getElementById('file-input').value = '';
+      
+        console.log('berhasil mengirim pesan');
       } 
     } catch (error) {
       console.error('Error:', error.message);
@@ -434,6 +437,12 @@ if (tombollihatgrup) {
 }
 
 export function updateContactRealtime(message, currentUserId) {
+  // Bunyi hanya kalau bukan pesan dari diri sendiri
+if (message.senderId !== currentUserId) {
+  playNotification();
+}
+console.log("senderId:", message.senderId);
+console.log("currentUserId:", currentUserId);
     const container = document.getElementById("contacts-list");
     if (!container) return;
   
@@ -465,7 +474,10 @@ export function updateContactRealtime(message, currentUserId) {
         // Tandai pesan baru
         if (message.senderId != currentUserId) {
           lastMsgElem.classList.add("new-message");
+          
+          
         }
+        
       }
   
       const timeElem = contactElem.querySelector(".message-time");
@@ -476,7 +488,13 @@ export function updateContactRealtime(message, currentUserId) {
       loadAllChatList();
     }
   }
-
+  const notificationSound = new Audio('../notifikasi/pesan.mp3');
+  function playNotification() {
+    notificationSound.currentTime = 0; // reset biar bisa bunyi cepat
+    notificationSound.play().catch(err => {
+      console.log('Audio gagal:', err);
+    });
+  }
 
   export async function deleteMessage(messageId) {
     
@@ -577,6 +595,9 @@ export function updateContactRealtime(message, currentUserId) {
         container.innerHTML = '<div class="no-members">Tidak ada anggota ditemukan.</div>';
         return;
       }
+      const namagrup = document.getElementById('namagrup')
+
+      namagrup.innerHTML = `<p>${usernamegrup}</p>`
   
       // Bangun tampilan: header jumlah anggota + daftar kartu anggota
       let html = `
@@ -608,7 +629,7 @@ export function updateContactRealtime(message, currentUserId) {
                 <span class="member-username">${escapeHtml(member.username)}</span>
                 <span class="badge-role" style='color:blue; font-size: 10px;'>${escapeHtml(member.role)}</span>
               </div>
-              <div class="member-last-seen ${statusClass}">${statusText}</div>
+              <div class="member-last-seen ${statusClass}" style='font-size: 11px'>${statusText}</div>
             </div>
         
             <div class="member-actions">
@@ -642,4 +663,121 @@ export function updateContactRealtime(message, currentUserId) {
       return m;
     });
   }
+   export async function deleteMessageGrup(messageId) {
+  
+    const konfirmasi = confirm('Yakin ingin menghapus pesan ini?');
+  
+    if (!konfirmasi) return; // Kalau user batal, jangan lanjut
+  
+    try {
+      const chatBox = document.getElementById('messages');
+const grupId = chatBox.dataset.groupId;
+      const response = await fetch(`http://localhost:3000/api/delete/grup/${messageId}?groupId=${grupId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const result = await response.json()
+      if (response.ok) {
+        showAlert(` ${result.message}`)
+      } else {
+        showAlert(`Gagal menghapus pesan! ${result.message}`);
+      }
+    } catch (err) {
+      console.error('Error:', err.message);
+      alert(`Gagal menghapus pesan. Silakan coba lagi. ${err.message}`);
+    }
+  }
+  window.deleteMessageGrup = deleteMessageGrup
+  async function editMessage(messageId) {
+    try {
+      // Ambil pesan lama
+      const resGet = await fetch(`http://localhost:3000/api/editpesan/${messageId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+  
+      const data = await resGet.json();
+      const pesanLama = data;
+      const pesanBaru = prompt( 'Ubah pesan:', pesanLama);
+  
+      if (!pesanBaru) {
+        alert('Pesan tidak boleh kosong!');
+        return;
+      }
+  
+      // Kirim update ke server
+      const resUpdate = await fetch(`http://localhost:3000/api/updatepesan/${messageId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ content: pesanBaru })
+      });
+  
+      if (resUpdate.ok) {
+        showAlert('berhasil mengedit pesan')
+        loadMessages(token); // Refresh chat
+        loadAllChatList(token);
+      } else {
+        alert('Gagal mengedit pesan!');
+      }
+  
+    } catch (error) {
+      console.error('Gagal mengedit pesan:', error);
+      alert('Terjadi kesalahan saat mengedit pesan.');
+    }
+  }
+  window.editMessage = editMessage
 
+  async function editMessageGrup(messageId) {
+    try {
+
+      // Ambil pesan lama
+      const resGet = await fetch(`http://localhost:3000/api/editpesangrup/${messageId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+  
+      const data = await resGet.json();
+      const pesanLama = data;
+      const pesanBaru = prompt( 'Ubah pesan:', pesanLama);
+  
+      if (!pesanBaru) {
+        alert('Pesan tidak boleh kosong!');
+        return;
+      }
+  
+      // Kirim update ke server
+      const resUpdate = await fetch(`http://localhost:3000/api/updatepesangrup/${messageId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ content: pesanBaru })
+      });
+  
+      if (resUpdate.ok) {
+        console.log('berhasil mengedit pesan')
+        loadMessagesGrup(grupId, token, currentUserId, lawanChat, socket); // Refresh chat
+        loadAllChatList(token);
+      } else {
+        alert('Gagal mengedit pesan!');
+      }
+  
+    } catch (error) {
+      console.error('Gagal mengedit pesan:', error);
+      alert('Terjadi kesalahan saat mengedit pesan.');
+    }
+  }
+window.editMessageGrup = editMessageGrup
+
+export function removeMessageFromUI(messageId) {
+  const el = document.querySelector(`[data-id="${messageId}"]`);
+  if (el) el.remove();
+}

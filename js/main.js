@@ -101,17 +101,15 @@ if(!token){
           grupId,
         
           onNewMessage: (message) => {
-            appendMessage(message, currentUserId);
-            
-
-            console.log(message.senderId)
-            
+            const normalized = normalizeMessage(message);
+            appendMessage(normalized, currentUserId);
           },
         
           onGroupMessage: (data) => {
-            appendMessage(data, currentUserId);
+            const normalized = normalizeMessage(data);
+            appendMessage(normalized, currentUserId);
             console.log(data)
-          },  
+          }, 
           onUpdateContact: (data) => {
               updateContactRealtime(data, currentUserId);
               
@@ -178,6 +176,17 @@ if(!token){
     .catch(err => {
       console.error(err);
     });
+}
+function normalizeMessage(msg) {
+  return {
+    messageId: msg.messageId || msg.id,
+    senderId: msg.senderId || msg.from,
+    senderName: msg.senderName || msg.sender || 'User',
+    content: msg.content || msg.message_text || msg.text,
+    messageType: msg.messageType || 'text',
+    imageUrl: msg.imageUrl || null,
+    timestamp: msg.timestamp || msg.createdAt || new Date()
+  };
 }
   initSearch(token);
   carikontak(token)

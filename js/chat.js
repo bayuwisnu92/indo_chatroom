@@ -363,9 +363,16 @@ if (tombollihatgrup) {
     }
   }
   export function appendMessage(message ,currentUserId) {
-
+if(message){
+  console.log(message)
+}else{
+  console.log('pesan tidak ada')
+}
     const chatBox = document.getElementById("messages");
-    if (!chatBox) return;
+    if (!chatBox) {
+      console.log("CHATBOX TIDAK ADA (PRIVATE KEMUNGKINAN MASUK SAAT TAB KONTAK)");
+      return;
+    }
   
     const isSent = message.senderId == currentUserId;
     const kelas = isSent ? 'message sent' : 'message received';

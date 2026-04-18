@@ -54,6 +54,13 @@ export function initSocket(token, currentUserId, handlers) {
       }
   
     });
+    socket.on("updateContactListAfterDelete", (data) => {
+      console.log("UPDATE CONTACT DELETE:", data);
+    
+      if (handlers.onRefreshContact) {
+        handlers.onRefreshContact();
+      }
+    });
   
     socket.on("updateGroupContactList", handlers.onUpdateGroupContact);
 
@@ -82,6 +89,7 @@ export function initSocket(token, currentUserId, handlers) {
     });
 
     socket.on("messageDeleted", (data) => {
+      console.log("🔥 RECEIVER DAPAT DELETE:", data);
       if (handlers.onMessageDeleted) {
         handlers.onMessageDeleted(data);
       }

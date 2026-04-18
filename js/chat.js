@@ -251,7 +251,7 @@ if (tombollihatgrup) {
         
             // 4. Tombol Aksi
             const tombolEdit = (isSent && !isImage) ? `<button class="btn btn-sm text-primary p-0 me-1" onclick="editMessageGrup(${p.messageId})"><i class="bi bi-pencil-square"></i></button>` : '';
-            const tombolHapus = isSent ? `<button class="btn btn-sm text-danger p-0" onclick="deleteMessageGrup(${p.messageId}, ${grupId})"><i class="bi bi-trash3"></i></button>` : '';
+            const tombolHapus = isSent ? `<button class="btn btn-sm text-danger p-0" onclick="deleteMessageGrup(${p.messageId})"><i class="bi bi-trash3"></i></button>` : '';
         
             // 5. Render ke HTML
             const pesanHtml = `
@@ -388,7 +388,7 @@ if(message){
       bodyHtml = renderContent(message.content || message.message_text);
     }
     const tombolHapus = isSent ? `<button class="btn btn-sm btn-outline-danger border-0" onclick="deleteMessage(${message.messageId})"><i class="bi bi-trash"></i></button>` : '';
-    const tombolEdit = (isSent && message.messageType === 'text') ? `<button class="btn btn-sm btn-outline-primary border-0" onclick="editMessage(${message.messageId}, ${token})"><i class="bi bi-pencil"></i></button>` : '';
+    const tombolEdit = (isSent && message.messageType === 'text') ? `<button class="btn btn-sm btn-outline-primary border-0" onclick="editMessage(${message.messageId})"><i class="bi bi-pencil"></i></button>` : '';
   
   
     const div = document.createElement("div");

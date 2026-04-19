@@ -141,7 +141,7 @@ if(!token){
             const el = document.querySelector(`[data-id="${data.messageId}"]`);
             console.log(el)
           
-            const contentEl = el.querySelector(".message-bubble");
+            const contentEl = el.querySelector(".message-text");
 
             if(!contentEl){
               console.log('pesan tidak masuk')
@@ -163,7 +163,7 @@ if(!token){
             const el = document.querySelector(`[data-id="${data.messageId}"]`);
             if (!el) return;
           
-            const contentEl = el.querySelector(".message-bubble");
+            const contentEl = el.querySelector(".message-text");
             if (!contentEl) return;
           
             contentEl.innerHTML = renderContent(data.content) +

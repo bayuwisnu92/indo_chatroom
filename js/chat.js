@@ -78,7 +78,7 @@ menu.insertAdjacentHTML('beforeend', blokir);
                class="chat-image img-fluid" 
                style="max-width: 200px; border-radius: 8px; cursor: pointer; display: block;"
                onclick="window.open(this.src)">
-          ${p.content ? `<p class="mt-2 mb-0">${renderContent(p.content)}</p>` : ''}
+          ${p.content ? `<span>${renderContent(p.content)}</span>` : ''}
         </div>`;
     } else {
       bodyPesan = renderContent(p.content || '');
@@ -91,9 +91,9 @@ menu.insertAdjacentHTML('beforeend', blokir);
     // Di dalam loadMessages (Private Chat)
 const pesanHtml = `
 <div class="${kelas}" data-id="${p.messageId}">
-  <div class="message-bubble shadow-sm"> <p class="mb-1">
-      <strong>${username}:</strong> ${bodyPesan}
-    </p>
+  <div class="message-bubble shadow-sm"> <span class="mb-1">
+      <strong>${username}:</strong> 
+    </span> <span class="message-text">${bodyPesan}</span>
     <div class="text-end">${tombolEdit} ${tombolHapus}</div>
   </div>
   <div class="message-time">${new Date(p.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
@@ -243,7 +243,7 @@ if (tombollihatgrup) {
                              class="img-fluid rounded shadow-sm" 
                              style="max-width: 200px; cursor: pointer;" 
                              onclick="window.open(this.src)">
-                        ${p.content ? `<p class="mt-2 mb-0" style="font-size: 14px;">${renderContent(p.content)}</p>` : ''}
+                        ${p.content ? `<span class="mt-2 mb-0" style="font-size: 14px;">${renderContent(p.content)}</span>` : ''}
                     </div>`;
             } else {
                 contentHtml = renderContent(p.content || '');
@@ -382,10 +382,13 @@ if(message){
     // Jika pesan mengandung image (dari socket biasanya membawa imageUrl atau messageType)
     if (message.messageType === 'image' || message.imageUrl) {
       bodyHtml = `
-        <img src="http://localhost:3000/uploads/${message.imageUrl}" class="chat-image mb-2" style="max-width: 200px; border-radius: 8px;">
-        ${message.content ? `<p class="mb-0">${renderContent(message.content)}</p>` : ''}`;
+        <img src="http://localhost:3000/uploads/${message.imageUrl}" 
+             class="chat-image mb-2" 
+             style="max-width: 200px; border-radius: 8px;">
+        ${message.content ? `<span class=message-text>${renderContent(message.content)}</span>` : ''}
+      `;
     } else {
-      bodyHtml = renderContent(message.content || message.message_text);
+      bodyHtml = `<span class=message-text>${renderContent(message.content || message.message_text)}</span>`;
     }
 
     const deleteFn = mode === "group" ? "deleteMessageGrup" : "deleteMessage";
@@ -407,16 +410,24 @@ const tombolEdit = (isSent && message.messageType === 'text')
     div.setAttribute("data-id", message.messageId);
   
     div.innerHTML = `
-      <div class="message-bubble shadow-sm">
-        <small class="d-block fw-bold mb-1">${username}</small>
-        ${bodyHtml}
-        <span class="new-message-badge" style="font-size: 9px; color: #dc3545;">baru</span>
-        <div class="message-actions">
-          ${tombolEdit} ${tombolHapus}
-        </div>
-      </div>
-      <div class="message-time">${new Date(message.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-    `;
+  <div class="message-bubble shadow-sm">
+    <small class="d-block fw-bold mb-1">${username}</small>
+
+    
+      ${bodyHtml}
+    
+
+    <span class="new-message-badge" style="font-size: 9px; color: #dc3545;">baru</span>
+
+    <div class="message-actions">
+      ${tombolEdit} ${tombolHapus}
+    </div>
+  </div>
+
+  <div class="message-time">
+    ${new Date(message.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+  </div>
+`;
   
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;

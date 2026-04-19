@@ -100,6 +100,17 @@ export function initSocket(token, currentUserId, handlers) {
         handlers.onGroupMessageDeleted(data);
       }
     });
+
+    socket.on("messageEdited", (data) => {
+      if (handlers.onMessageEdited) {
+        handlers.onMessageEdited(data);
+      }
+    });
+    socket.on("groupMessageEdited", (data) => {
+      if (handlers.onGroupMessageEdited) {
+        handlers.onGroupMessageEdited(data);
+      }
+    });
   
     return socket;
   }

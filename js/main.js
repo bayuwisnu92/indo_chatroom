@@ -102,12 +102,12 @@ if(!token){
         
           onNewMessage: (message) => {
             const normalized = normalizeMessage(message);
-            appendMessage(normalized, currentUserId);
+            appendMessage(normalized, currentUserId,'private');
           },
         
           onGroupMessage: (data) => {
             const normalized = normalizeMessage(data);
-            appendMessage(normalized, currentUserId);
+            appendMessage(normalized, currentUserId,'grup');
             console.log(data)
           }, 
           onUpdateContact: (data) => {
@@ -135,11 +135,40 @@ if(!token){
               messageElement.remove(); // hapus dari tampilan
             }
           },
+          onMessageEdited: (data) => {
+            console.log("EDIT REALTIME:", data);
+          
+            const el = document.querySelector(`[data-id="${data.messageId}"]`);
+            console.log(el)
+          
+            const contentEl = el.querySelector(".message-bubble");
+
+            if(!contentEl){
+              console.log('pesan tidak masuk')
+            }
+          
+            if (contentEl) {
+              contentEl.innerHTML = renderContent(data.content) + 
+                `<span style="font-size:10px; color:gray;"> (diedit)</span>`;
+            }
+          },
           
           onGroupMessageDeleted: ({ messageId }) => {
             removeMessageFromUI(messageId);
             loadAllChatList(token)
           },
+          onGroupMessageEdited: (data) => {
+            console.log("GROUP EDIT:", data);
+          
+            const el = document.querySelector(`[data-id="${data.messageId}"]`);
+            if (!el) return;
+          
+            const contentEl = el.querySelector(".message-bubble");
+            if (!contentEl) return;
+          
+            contentEl.innerHTML = renderContent(data.content) +
+              `<span style="font-size:10px; color:red;"> (diedit)</span>`;
+          }
         
         });
       

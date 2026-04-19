@@ -362,7 +362,7 @@ if (tombollihatgrup) {
       }
     }
   }
-  export function appendMessage(message ,currentUserId) {
+  export function appendMessage(message ,currentUserId, mode = 'private') {
 if(message){
   console.log(message)
 }else{
@@ -387,16 +387,27 @@ if(message){
     } else {
       bodyHtml = renderContent(message.content || message.message_text);
     }
-    const tombolHapus = isSent ? `<button class="btn btn-sm btn-outline-danger border-0" onclick="deleteMessage(${message.messageId})"><i class="bi bi-trash"></i></button>` : '';
-    const tombolEdit = (isSent && message.messageType === 'text') ? `<button class="btn btn-sm btn-outline-primary border-0" onclick="editMessage(${message.messageId})"><i class="bi bi-pencil"></i></button>` : '';
-  
+
+    const deleteFn = mode === "group" ? "deleteMessageGrup" : "deleteMessage";
+const editFn = mode === "group" ? "editMessageGrup" : "editMessage";
+const tombolHapus = isSent 
+? `<button class="btn btn-sm btn-outline-danger border-0" onclick="${deleteFn}(${message.messageId})">
+    <i class="bi bi-trash"></i>
+  </button>` 
+: '';
+
+const tombolEdit = (isSent && message.messageType === 'text') 
+? `<button class="btn btn-sm btn-outline-primary border-0" onclick="${editFn}(${message.messageId})">
+    <i class="bi bi-pencil"></i>
+  </button>` 
+: '';
   
     const div = document.createElement("div");
     div.className = kelas;
     div.setAttribute("data-id", message.messageId);
   
     div.innerHTML = `
-      <div class="message-content shadow-sm">
+      <div class="message-bubble shadow-sm">
         <small class="d-block fw-bold mb-1">${username}</small>
         ${bodyHtml}
         <span class="new-message-badge" style="font-size: 9px; color: #dc3545;">baru</span>
@@ -727,8 +738,7 @@ const grupId = chatBox.dataset.groupId;
   
       if (resUpdate.ok) {
         showAlert('berhasil mengedit pesan')
-        loadMessages(token); // Refresh chat
-        loadAllChatList(token);
+        
       } else {
         alert('Gagal mengedit pesan!');
       }
@@ -771,8 +781,7 @@ const grupId = chatBox.dataset.groupId;
   
       if (resUpdate.ok) {
         console.log('berhasil mengedit pesan')
-        loadMessagesGrup(grupId, token, currentUserId, lawanChat, socket); // Refresh chat
-        loadAllChatList(token);
+        
       } else {
         alert('Gagal mengedit pesan!');
       }

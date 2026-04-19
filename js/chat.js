@@ -39,9 +39,11 @@ export async function loadMessages(conversationId, token, currentUserId, socket)
       const blokir = `<li><a class="dropdown-item text-danger" href="#"><i class="fas fa-ban me-2"></i>Blokir</a></li>`;
 menu.insertAdjacentHTML('beforeend', blokir);
       // Render Header
+      console.log("LAWAN CHAT:", lawanChat);
       const statusnya = lawanChat.status === 'online' ? 'online' : 'offline';
       namachat.innerHTML = `
-  <div class="chat-header-content d-flex align-items-center">
+  <div class="chat-header-content d-flex align-items-center" data-user-id="${lawanChat.user_id}">
+
     <div class="header-avatar-wrapper position-relative">
       <img src="http://localhost:3000/uploads/profile/${gambarprofile}" 
            onerror="this.src='http://localhost:3000/uploads/profile/none.png'" 

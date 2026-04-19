@@ -152,6 +152,26 @@ if(!token){
                 `<span style="font-size:10px; color:gray;"> (diedit)</span>`;
             }
           },
+
+          onUserStatus: (data) => {
+            console.log("STATUS USER:", data);
+            updateUserStatusUI(data);
+            const contact = document.querySelector(`.contact-card[data-user-id="${data.userId}"]`);
+              if (!contact) return;
+
+              const statusDot = contact.querySelector(".status-indicator");
+              const statusText = contact.querySelector(".status-text");
+
+              if (statusDot) {
+                statusDot.classList.remove("online", "offline");
+                statusDot.classList.add(data.status);
+              }
+
+              if (statusText) {
+                statusText.textContent = data.status;
+              }
+            
+          },
           
           onGroupMessageDeleted: ({ messageId }) => {
             removeMessageFromUI(messageId);
@@ -310,4 +330,25 @@ formphotogrup.addEventListener('submit', async (e) => {
 function showContacts() {
   document.getElementById('kontak').style.display = 'block';
   document.querySelector('.chat-container').style.display = 'none';
+}
+
+function updateUserStatusUI({ userId, status }) {
+
+  // 🔥 update header chat (lawan bicara)
+  const header = document.querySelector(`.chat-header-content[data-user-id="${userId}"]`);
+  
+  if (header) {
+    const dot = header.querySelector(".status-indicator-dot");
+    const text = header.querySelector(".status-text-small");
+
+    if (dot) {
+      dot.classList.remove("online", "offline");
+      dot.classList.add(status);
+    }
+
+    if (text) {
+      text.textContent = status;
+    }
+  }
+
 }

@@ -1,4 +1,4 @@
-import { formatDate, renderContent, showAlert }
+import { formatDate, renderContent, showAlert ,showTypingIndicator, hideTypingIndicator}
 from "./utils.js";
 
 import { verifyToken, decodeToken, logoutOnline }
@@ -21,7 +21,7 @@ import { updateProfile, updateprofilegrup } from "./profile.js";
 // }
 // Optional: supaya preload
 
-
+let activeConversationId = null;
 // 在页面加载后执行
 document.addEventListener('DOMContentLoaded', function() {
   const fabToggle = document.getElementById('fabToggle');
@@ -72,6 +72,8 @@ formPhoto.addEventListener('submit', async (e) => {
 
 const urlParams = new URLSearchParams(window.location.search);
 export const conversationId = urlParams.get('conversationId');
+
+activeConversationId = conversationId;
 const lawanChat =urlParams.get('username');
 export const gambarprofile =urlParams.get('image');
 
@@ -172,6 +174,26 @@ if(!token){
               }
             
           },
+          onUserTyping: (data) => {
+            console.log("🛑 Typing:", data);
+            
+            if (String(data.conversationId) !== String(activeConversationId)) return;
+
+            
+          
+            if (data.senderId !== currentUserId) {
+              showTypingIndicator(data);
+            }
+          },
+          
+          onUserStopTyping: (data) => {
+            console.log("🛑 stopTyping:", data);
+          
+            if (String(data.conversationId) !== String(activeConversationId)) return;
+          
+            hideTypingIndicator(data);
+          },
+
           
           onGroupMessageDeleted: ({ messageId }) => {
             removeMessageFromUI(messageId);
@@ -188,9 +210,11 @@ if(!token){
           
             contentEl.innerHTML = renderContent(data.content) +
               `<span style="font-size:10px; color:red;"> (diedit)</span>`;
-          }
-        
+          },
+          
+          
         });
+        
       
         if (conversationId && !isNaN(conversationId)) {
       
@@ -226,6 +250,8 @@ if(!token){
       console.error(err);
     });
 }
+
+
 function normalizeMessage(msg) {
   return {
     messageId: msg.messageId || msg.id,
@@ -352,3 +378,4 @@ function updateUserStatusUI({ userId, status }) {
   }
 
 }
+

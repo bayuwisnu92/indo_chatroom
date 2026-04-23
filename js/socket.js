@@ -111,6 +111,19 @@ export function initSocket(token, currentUserId, handlers) {
         handlers.onGroupMessageEdited(data);
       }
     });
+
+    socket.on("userTyping", (data) => {
+      console.log("🟢 RAW SOCKET userTyping:", data);
+      if(handlers.onUserTyping) {
+        handlers.onUserTyping(data);
+      }
+    });
+    
+    socket.on("userStopTyping", (data) => {
+      if(handlers.onUserStopTyping) {
+        handlers.onUserStopTyping(data);
+      }
+    });
   
     return socket;
   }

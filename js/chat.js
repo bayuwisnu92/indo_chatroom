@@ -26,7 +26,7 @@ export async function loadMessages(conversationId, token, currentUserId, socket)
         document.getElementById('messages').textContent = 'Gagal memuat pesan.';
         return;
       }
-  
+      
       const data = await response.json();
       const messages = data.messages || [];
       const lawanChat = data.lawanChat || {};
@@ -108,6 +108,8 @@ const pesanHtml = `
   // ... scroll ke bawah ...
   
       isipesan.scrollTop = isipesan.scrollHeight;
+      console.log(`usernamenya adalah  ${lawanChat}`)
+      untukTyping(socket, conversationId, currentUserId);
   
     } catch (error) {
       console.error('Gagal memuat pesan:', error);
@@ -199,7 +201,7 @@ if (tombollihatgrup) {
           
           <span><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#photogrup" style="display:inline-block">
             ${gambargrup}</a></span>
-            <span class="fw-bold fs-5">#${lawanChat}</span>
+            <span class="fw-bold fs-5">grup ${lawanChat}</span>
             <span class="badge ${badgeColor} ms-1" style="font-size: 10px; vertical-align: middle;">
               ${myRole.toUpperCase()}
             </span>
@@ -312,15 +314,48 @@ if (tombollihatgrup) {
       sendMessage(conversationId, grupId, token, currentUserId, lawanChat);
     });
   }
+
+  export function untukTyping(socket, conversationId, currentUserId) {
+    const messageInput = document.getElementById('message-input');
+  
+    if (!messageInput) {
+      console.log('message-input tidak ditemukan');
+      
+    }
+  
+    let typingTimeout;
+  
+    messageInput.addEventListener("input", () => {
+      socket.emit("typing", {
+        conversationId,
+        senderId: currentUserId
+      });
+      console.log("EMIT typing:", {
+        conversationId,
+        senderId: currentUserId
+      });
+  
+      clearTimeout(typingTimeout);
+  
+      typingTimeout = setTimeout(() => {
+        socket.emit("stopTyping", {
+          conversationId,
+          senderId: currentUserId
+        });
+      }, 1500);
+    });
+  }
   
   async function sendMessage(conversationId, grupId, token, currentUserId, lawanChat) {
   
     const messageInput = document.getElementById('message-input');
+
     const fileInput = document.getElementById('file-input');
   
     const content = messageInput.value.trim();
     const file = fileInput.files[0];
-  
+    
+
     if (!content && !file) return;
   
     const formData = new FormData();
@@ -337,7 +372,7 @@ if (tombollihatgrup) {
     } else if (conversationId) {
   
       try {
-  
+
         const response = await fetch(`http://localhost:3000/api/${conversationId}/send`, {
           method: 'POST',
           headers: {

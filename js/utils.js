@@ -58,4 +58,23 @@ export function formatDate(isoString) {
 
 
 
+  export function showTypingIndicator(data) {
 
+    const el = document.getElementById("typing-indicator");
+    if (!el) return;
+  
+    el.textContent = `${data.username} sedang mengetik...`;
+    el.style.display = "block";
+  }
+  
+  export function hideTypingIndicator(data) {
+    const el = document.getElementById("typing-indicator");
+  
+    if (!el) {
+      // optional debug
+      console.warn("typing-indicator belum ada (skip hide)");
+      return;
+    }
+  
+    el.style.display = "none";
+  }

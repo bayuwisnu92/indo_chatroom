@@ -146,12 +146,17 @@
 
           <!-- AREA PESAN -->
           <div id="messages" class="p-3 bg-light" style="min-height: 55vh; max-height: 57vh; overflow-y: auto;">
+            
             <!-- Pesan akan dirender di sini -->
             <div class="text-center text-muted mt-5">
               <i class="fas fa-comments fa-3x mb-3 opacity-50"></i>
               <p>Belum ada pesan. Mulai percakapan sekarang.</p>
             </div>
           </div>
+          <div id="typing-indicator"
+            class="text-muted px-3"
+            style="display: none;">
+        </div>
 
           <!-- FORM INPUT PESAN -->
           <form id="chat-form" class="chat-form bg-white p-3 border-top">

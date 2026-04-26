@@ -22,6 +22,7 @@ import { updateProfile, updateprofilegrup } from "./profile.js";
 // Optional: supaya preload
 
 let activeConversationId = null;
+let activeGrupId = null
 // 在页面加载后执行
 document.addEventListener('DOMContentLoaded', function() {
   const fabToggle = document.getElementById('fabToggle');
@@ -79,6 +80,7 @@ export const gambarprofile =urlParams.get('image');
 
 
 export const grupId = urlParams.get('grupId')
+activeGrupId= grupId
 export const token = localStorage.getItem("token");
 if(!token){
   window.location.href = 'login.html';
@@ -175,21 +177,25 @@ if(!token){
             
           },
           onUserTyping: (data) => {
-            console.log("🛑 Typing:", data);
-            
-            if (String(data.conversationId) !== String(activeConversationId)) return;
-
-            
+            console.log("Typing:", data);
           
-            if (data.senderId !== currentUserId) {
+            if (
+              String(data.id) !== String(activeConversationId) &&
+              String(data.id) !== String(activeGrupId)
+            ) return;
+          
+            if (String(data.senderId) !== String(currentUserId)) {
               showTypingIndicator(data);
             }
           },
           
           onUserStopTyping: (data) => {
-            console.log("🛑 stopTyping:", data);
+            console.log("stopTyping:", data);
           
-            if (String(data.conversationId) !== String(activeConversationId)) return;
+            if (
+              String(data.id) !== String(activeConversationId) &&
+              String(data.id) !== String(activeGrupId)
+            ) return;
           
             hideTypingIndicator(data);
           },

@@ -59,11 +59,11 @@ export function formatDate(isoString) {
 
 
   export function showTypingIndicator(data) {
-
+  const nama = data.type === `private`? '' : data.username
     const el = document.getElementById("typing-indicator");
     if (!el) return;
   
-    el.textContent = `${data.username} sedang mengetik...`;
+    el.textContent = `${nama} sedang mengetik...`;
     el.style.display = "block";
   }
   
@@ -79,4 +79,4 @@ export function formatDate(isoString) {
     el.style.display = "none";
   }
 
-  
+

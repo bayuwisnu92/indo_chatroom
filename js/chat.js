@@ -129,7 +129,11 @@ messages.forEach(p => {
 
     isipesan.scrollTop = isipesan.scrollHeight;
     console.log(`usernamenya adalah  ${lawanChat}`)
-    untukTyping(socket, conversationId, currentUserId);
+    untukTyping(socket, {
+      type : 'private',
+      id : conversationId,
+      currentUserId
+    });
 
   } catch (error) {
     console.error('Gagal memuat pesan:', error);
@@ -292,6 +296,11 @@ if (tombollihatgrup) {
             
             isipesan.insertAdjacentHTML('beforeend', pesanHtml);
         });
+        untukTyping(socket, {
+          type : 'group',
+          id : grupId,
+          currentUserId
+        });
       }
   
       // Auto-scroll ke pesan paling bawah
@@ -335,7 +344,12 @@ if (tombollihatgrup) {
     });
   }
 
-  export function untukTyping(socket, conversationId, currentUserId) {
+  export function untukTyping(socket, option) {
+    const {
+      type,
+      id,
+      currentUserId
+    } = option
     const messageInput = document.getElementById('message-input');
   
     if (!messageInput) {
@@ -347,11 +361,13 @@ if (tombollihatgrup) {
   
     messageInput.addEventListener("input", () => {
       socket.emit("typing", {
-        conversationId,
+        type,
+        id,
         senderId: currentUserId
       });
       console.log("EMIT typing:", {
-        conversationId,
+        type,
+        id,
         senderId: currentUserId
       });
   
@@ -359,7 +375,8 @@ if (tombollihatgrup) {
   
       typingTimeout = setTimeout(() => {
         socket.emit("stopTyping", {
-          conversationId,
+          type,
+          id,
           senderId: currentUserId
         });
       }, 1500);

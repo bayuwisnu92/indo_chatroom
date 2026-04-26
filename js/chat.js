@@ -3,6 +3,7 @@ import { renderContent } from "./utils.js";
 // import { conversationId, grupId, token } from "./main.js";
 import { showAlert, formatDate } from "./utils.js";
 import { loadAllChatList } from "./contacts.js";
+import { setActiveConversation } from "./state.js";
 const token = localStorage.getItem('token')
 const urlParams = new URLSearchParams(window.location.search);
 const gambarprofile = urlParams.get('image');
@@ -13,108 +14,127 @@ const usernamegrup = urlParams.get('username')
 
 
 export async function loadMessages(conversationId, token, currentUserId, socket) {
-    socket.emit("joinConversation", conversationId);
-    if (!conversationId || isNaN(conversationId)) {
-      return; // ⛔ STOP kalau invalid
-    }
-    try {
-      const response = await fetch(`http://localhost:3000/api/${conversationId}/messages`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-  
-      if (!response.ok) {
-        document.getElementById('messages').textContent = 'Gagal memuat pesan.';
-        return;
-      }
-      
-      const data = await response.json();
-      const messages = data.messages || [];
-      const lawanChat = data.lawanChat || {};
-  
-      const isipesan = document.getElementById('messages');
-      const namachat = document.getElementById('chat-name');
-      
-      isipesan.innerHTML = '';
-      const menu = document.getElementById('menu')
-      const blokir = `<li><a class="dropdown-item text-danger" href="#"><i class="fas fa-ban me-2"></i>Blokir</a></li>`;
-menu.insertAdjacentHTML('beforeend', blokir);
-      // Render Header
-      console.log("LAWAN CHAT:", lawanChat);
-      const statusnya = lawanChat.status === 'online' ? 'online' : 'offline';
-      namachat.innerHTML = `
-  <div class="chat-header-content d-flex align-items-center" data-user-id="${lawanChat.user_id}">
 
-    <div class="header-avatar-wrapper position-relative">
-      <img src="http://localhost:3000/uploads/profile/${gambarprofile}" 
-           onerror="this.src='http://localhost:3000/uploads/profile/none.png'" 
-           alt="Foto" 
-           class="header-profile-image" width='40' height='40'>
-      <span class="status-indicator-dot ${statusnya}"></span>
-    </div>
-
-    <div class="header-info-wrapper ms-3">
-      <h6 class="mb-0 chat-user-name">${lawanChat.username || 'Lawan Chat'}</h6>
-      <div class="status-detail">
-        <span class="status-text-small">${statusnya}</span>
-      </div>
-    </div>
-  </div>`;
-  
-      // ... kode header tetap sama ...
-  
-  messages.forEach(p => {
-    const senderId = p.sender.id || p.sender.user_id;
-    const isSent = String(senderId) === String(currentUserId);
-    const kelas = isSent ? 'message sent' : 'message received';
-    const username = p.sender.username || 'Anonim';
-    let bodyPesan = '';
-  
-    // PERBAIKAN DI SINI: Gunakan messageType dan imageUrl (CamelCase)
-    // Sesuai dengan mapping di ChatController: messages = rawMessages.map(msg => ({ messageType: msg.message_type ... }))
-    
-    if (p.messageType === 'image' && p.imageUrl) {
-      bodyPesan = `
-        <div class="chat-image-container">
-          <img src="http://localhost:3000/uploads/${p.imageUrl}" 
-               alt="image" 
-               class="chat-image img-fluid" 
-               style="max-width: 200px; border-radius: 8px; cursor: pointer; display: block;"
-               onclick="window.open(this.src)">
-          ${p.content ? `<span>${renderContent(p.content)}</span>` : ''}
-        </div>`;
-    } else {
-      bodyPesan = renderContent(p.content || '');
-    }
-  
-    // Gunakan p.messageType juga untuk pengecekan tombol edit
-    const tombolHapus = isSent ? `<button class="btn btn-sm btn-outline-danger border-0" onclick="deleteMessage(${p.messageId})"><i class="bi bi-trash"></i></button>` : '';
-    const tombolEdit = (isSent && p.messageType === 'text') ? `<button class="btn btn-sm btn-outline-primary border-0" onclick="editMessage(${p.messageId})"><i class="bi bi-pencil"></i></button>` : '';
-  
-    // Di dalam loadMessages (Private Chat)
-const pesanHtml = `
-<div class="${kelas}" data-id="${p.messageId}">
-  <div class="message-bubble shadow-sm"> <span class="mb-1">
-      <strong>${username}:</strong> 
-    </span> <span class="message-text">${bodyPesan}</span>
-    <div class="text-end">${tombolEdit} ${tombolHapus}</div>
-  </div>
-  <div class="message-time">${new Date(p.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-</div>
-`;
-  
-    isipesan.insertAdjacentHTML('beforeend', pesanHtml);
-  });
-  
-  // ... scroll ke bawah ...
-  
-      isipesan.scrollTop = isipesan.scrollHeight;
-      console.log(`usernamenya adalah  ${lawanChat}`)
-      untukTyping(socket, conversationId, currentUserId);
-  
-    } catch (error) {
-      console.error('Gagal memuat pesan:', error);
-    }
+  setActiveConversation(conversationId); // 🔥 SET DI SINI
+  socket.emit("joinConversation", conversationId);
+  if (!conversationId || isNaN(conversationId)) {
+    return; // ⛔ STOP kalau invalid
   }
+if(conversationId){
+
+  socket.emit("messageRead", {
+    conversationId: conversationId
+  });
+}
+  try {
+    const response = await fetch(`http://localhost:3000/api/${conversationId}/messages`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      document.getElementById('messages').textContent = 'Gagal memuat pesan.';
+      return;
+    }
+    
+    const data = await response.json();
+    const messages = data.messages || [];
+    const lawanChat = data.lawanChat || {};
+
+    const isipesan = document.getElementById('messages');
+    const namachat = document.getElementById('chat-name');
+    
+    isipesan.innerHTML = '';
+    const menu = document.getElementById('menu')
+    const blokir = `<li><a class="dropdown-item text-danger" href="#"><i class="fas fa-ban me-2"></i>Blokir</a></li>`;
+menu.insertAdjacentHTML('beforeend', blokir);
+    // Render Header
+    console.log("LAWAN CHAT:", lawanChat);
+    const statusnya = lawanChat.status === 'online' ? 'online' : 'offline';
+    namachat.innerHTML = `
+<div class="chat-header-content d-flex align-items-center" data-user-id="${lawanChat.user_id}">
+
+  <div class="header-avatar-wrapper position-relative">
+    <img src="http://localhost:3000/uploads/profile/${gambarprofile}" 
+         onerror="this.src='http://localhost:3000/uploads/profile/none.png'" 
+         alt="Foto" 
+         class="header-profile-image" width='40' height='40'>
+    <span class="status-indicator-dot ${statusnya}"></span>
+  </div>
+
+  <div class="header-info-wrapper ms-3">
+    <h6 class="mb-0 chat-user-name">${lawanChat.username || 'Lawan Chat'}</h6>
+    <div class="status-detail">
+      <span class="status-text-small">${statusnya}</span>
+    </div>
+  </div>
+</div>`;
+
+    // ... kode header tetap sama ...
+console.log(messages)
+messages.forEach(p => {
+  const senderId = p.sender.id || p.sender.user_id;
+  const isSent = String(senderId) === String(currentUserId);
+  const kelas = isSent ? 'message sent' : 'message received';
+  const username = p.sender.username || 'Anonim';
+  let bodyPesan = '';
+  const stat = p.sender.id === currentUserId ? p.status : '';
+  
+
+  // PERBAIKAN DI SINI: Gunakan messageType dan imageUrl (CamelCase)
+  // Sesuai dengan mapping di ChatController: messages = rawMessages.map(msg => ({ messageType: msg.message_type ... }))
+  
+  if (p.messageType === 'image' && p.imageUrl) {
+    bodyPesan = `
+      <div class="chat-image-container">
+        <img src="http://localhost:3000/uploads/${p.imageUrl}" 
+             alt="image" 
+             class="chat-image img-fluid" 
+             style="max-width: 200px; border-radius: 8px; cursor: pointer; display: block;"
+             onclick="window.open(this.src)">
+        ${p.content ? `<span>${renderContent(p.content)}</span>` : ''}
+      </div>`;
+  } else {
+    bodyPesan = renderContent(p.content || '');
+  }
+
+  // Gunakan p.messageType juga untuk pengecekan tombol edit
+  const tombolHapus = isSent ? `<button class="btn btn-sm btn-outline-danger border-0" onclick="deleteMessage(${p.messageId})"><i class="bi bi-trash"></i></button>` : '';
+  const tombolEdit = (isSent && p.messageType === 'text') ? `<button class="btn btn-sm btn-outline-primary border-0" onclick="editMessage(${p.messageId})"style='color:white;'><i class="bi bi-pencil"></i></button>` : '';
+
+  // Di dalam loadMessages (Private Chat)
+  const pesanHtml = `
+  <div class="${kelas}" data-id="${p.messageId}">
+      <div class="message-bubble shadow-sm"> 
+          <span class="mb-1">
+              <strong>${username}:</strong> 
+          </span> 
+          <span class="message-text">${bodyPesan}</span>
+          <div class="text-end mt-1">${tombolEdit} ${tombolHapus}</div>
+          <div class="message-time">${new Date(p.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+
+
+
+<span style="color:grey">${renderStatus(stat)}</span>
+
+</div>
+      </div>
+      
+  </div>
+  `;
+
+  isipesan.insertAdjacentHTML('beforeend', pesanHtml);
+});
+
+// ... scroll ke bawah ...
+
+    isipesan.scrollTop = isipesan.scrollHeight;
+    console.log(`usernamenya adalah  ${lawanChat}`)
+    untukTyping(socket, conversationId, currentUserId);
+
+  } catch (error) {
+    console.error('Gagal memuat pesan:', error);
+  }
+}
   
   
   
@@ -414,6 +434,11 @@ if(message){
     const isSent = message.senderId == currentUserId;
     const kelas = isSent ? 'message sent' : 'message received';
     const username = message.senderName || 'User';
+    const statusHtml = message.senderId === currentUserId
+  ? `<span class="status-icon">${renderStatus(message.status)}</span>`
+  : '';
+    console.log(`${message.senderId} dan currenUserIdnya adalah ${currentUserId}`)
+
   
     let bodyHtml = '';
     // Jika pesan mengandung image (dari socket biasanya membawa imageUrl atau messageType)
@@ -437,7 +462,7 @@ const tombolHapus = isSent
 : '';
 
 const tombolEdit = (isSent && message.messageType === 'text') 
-? `<button class="btn btn-sm btn-outline-primary border-0" onclick="${editFn}(${message.messageId})">
+? `<button class="btn btn-sm btn-outline-primary border-0" onclick="${editFn}(${message.messageId})" style="color:white">
     <i class="bi bi-pencil"></i>
   </button>` 
 : '';
@@ -449,25 +474,28 @@ const tombolEdit = (isSent && message.messageType === 'text')
     div.innerHTML = `
   <div class="message-bubble shadow-sm">
     <small class="d-block fw-bold mb-1">${username}</small>
-
-    
       ${bodyHtml}
-    
-
     <span class="new-message-badge" style="font-size: 9px; color: #dc3545;">baru</span>
 
     <div class="message-actions">
       ${tombolEdit} ${tombolHapus}
     </div>
+    <div class="message-time">
+      ${new Date(message.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+      ${statusHtml}
+    </div>
   </div>
 
-  <div class="message-time">
-    ${new Date(message.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
-  </div>
 `;
   
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
+  }
+  export function renderStatus(status) {
+    if (status === "sent") return "✓";
+    if (status === "delivered") return "terkirim";
+    if (status === "read") return `<span style="color:white">dibaca</span>`;
+    return "";
   }
 
   async function sendMessageGrup(grupId, token, currentUserId, lawanChat) {

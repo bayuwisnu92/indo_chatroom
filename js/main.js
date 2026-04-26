@@ -9,7 +9,7 @@ window.showContacts= showContacts;
 import { initSocket } from "./socket.js";
 
 import { initSearch, carikontak, submitAddMember } from "./search.js";
-import { loadMessages, loadMessagesGrup, appendMessage, updateContactRealtime, initChatHandlers, buatgrup, removeMessageFromUI } from "./chat.js";
+import { loadMessages, loadMessagesGrup, appendMessage, updateContactRealtime, initChatHandlers, buatgrup, removeMessageFromUI, renderStatus } from "./chat.js";
 import { updateProfile, updateprofilegrup } from "./profile.js";
 
 // const notificationSound = new Audio('../notifikasi/Jejak_Cinta_Abadi.mp3');
@@ -213,7 +213,48 @@ if(!token){
           },
           
           
+          messageDelivered: (data) => {
+              if(data.senderId !== currentUserId) {
+                socket.emit("messageDelivered", {
+                  messageId: data.messageId,
+                  conversationId: data.conversationId
+                });
+              }
+            console.log("DELIVERED:", data);
+          },
+          onMessageStatus: (data) => {
+            console.log("STATUS UPDATE:", data);
+          
+            // 🔥 CASE 1: single message (sent / delivered)
+            if (data.messageId) {
+              const msgEl = document.querySelector(`[data-id="${data.messageId}"]`);
+              if (!msgEl) return;
+          
+              if (!msgEl.classList.contains("sent")) return;
+          
+              const statusEl = msgEl.querySelector(".status-icon");
+              if (!statusEl) return;
+          
+              statusEl.innerHTML = renderStatus(data.status);
+            }
+          
+            // 🔥 CASE 2: multiple message (read)
+            if (data.messageIds && Array.isArray(data.messageIds)) {
+              data.messageIds.forEach(id => {
+                const msgEl = document.querySelector(`[data-id="${id}"]`);
+                if (!msgEl) return;
+          
+                if (!msgEl.classList.contains("sent")) return;
+          
+                const statusEl = msgEl.querySelector(".status-icon");
+                if (!statusEl) return;
+          
+                statusEl.innerHTML = renderStatus(data.status);
+              });
+            }
+          }
         });
+
         
       
         if (conversationId && !isNaN(conversationId)) {

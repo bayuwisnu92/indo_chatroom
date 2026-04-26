@@ -1,5 +1,5 @@
 // socket.js
-
+import { getActiveConversation } from "./state.js";
 export function initSocket(token, currentUserId, handlers) {
 
     const socket = io("http://localhost:3000", {
@@ -26,11 +26,30 @@ export function initSocket(token, currentUserId, handlers) {
     // EVENT: MESSAGE MASUK
     // ========================
     socket.on("newMessage", (message) => {
-  
+     
+      if(handlers.messageDelivered) {
+        handlers.messageDelivered(message);
+      }
       if (handlers.onNewMessage) {
         handlers.onNewMessage(message);
       }
+      const activeConversationId = getActiveConversation();
+       // 🔥 TAMBAHAN PENTING
+        if (
+          message.senderId !== currentUserId &&
+          String(message.conversationId) === String(activeConversationId)
+        ) {
+          socket.emit("messageRead", {
+            conversationId: message.conversationId
+          });
+        }
   
+    });
+
+    socket.on("messageStatus", (data) => {
+      if(handlers.onMessageStatus){
+        handlers.onMessageStatus(data)
+      }
     });
   
     // ========================

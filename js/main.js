@@ -111,7 +111,7 @@ if(!token){
         
           onGroupMessage: (data) => {
             const normalized = normalizeMessage(data);
-            appendMessage(normalized, currentUserId,'grup');
+            appendMessage(normalized, currentUserId,'group')
             console.log(data)
           }, 
           onUpdateContact: (data) => {

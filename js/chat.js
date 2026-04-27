@@ -220,19 +220,40 @@ if (tombollihatgrup) {
            class="header-profile-image" width='40' height='40'>`
       console.log(`pengen tau ${lawanChat}`)
       namachat.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center w-100">
-          <div>
-          
-          <span><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#photogrup" style="display:inline-block">
-            ${gambargrup}</a></span>
-            <span class="fw-bold fs-5">grup ${lawanChat}</span>
-            <span class="badge ${badgeColor} ms-1" style="font-size: 10px; vertical-align: middle;">
-              ${myRole.toUpperCase()}
-            </span>
-          </div>
-          
-        </div>
-      `;
+  <div class="d-flex justify-content-between align-items-center w-100">
+    
+    <div class="d-flex align-items-center gap-2">
+      
+      <!-- WRAPPER GAMBAR -->
+      <div style="position: relative; display: inline-block;">
+        
+        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#photogrup">
+          ${gambargrup}
+        </a>
+
+        <!-- BADGE -->
+        <span class="badge ${badgeColor}" 
+          style="
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            font-size: 8px;
+            padding: 4px 6px;
+            border-radius: 10px;
+            border: 2px solid white;
+          ">
+          ${myRole.toUpperCase()}
+        </span>
+
+      </div>
+
+      <!-- NAMA -->
+      <span class="fw-bold fs-5">${lawanChat}</span>
+
+    </div>
+
+  </div>
+`;
   
       // Pasang listener jika tombol render (untuk admin)
       if (myRole === 'admin') {

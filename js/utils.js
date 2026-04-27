@@ -61,6 +61,7 @@ export function formatDate(isoString) {
   export function showTypingIndicator(data) {
   const nama = data.type === `private`? '' : data.username
     const el = document.getElementById("typing-indicator");
+    el.style.fontSize = '12px';
     if (!el) return;
   
     el.textContent = `${nama} sedang mengetik...`;

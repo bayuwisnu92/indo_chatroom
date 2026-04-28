@@ -1,8 +1,9 @@
 // socket.js
 import { getActiveConversation } from "./state.js";
+import { port } from "./port.js"
 export function initSocket(token, currentUserId, handlers) {
 
-    const socket = io("http://localhost:3000", {
+    const socket = io(`${port}`, {
       auth: { token }
     });
   

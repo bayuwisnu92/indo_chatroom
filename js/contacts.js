@@ -2,7 +2,7 @@
 
 import { formatDate } from "./utils.js";
 import { showAlert } from "./utils.js";
-
+import { port } from "./port.js"
 export let dataGlobal = [];
 let conversationMap = {};
 
@@ -10,13 +10,13 @@ export async function loadAllChatList(token) {
   try {
     const [contactRes, groupRes] = await Promise.all([
 
-      fetch('http://localhost:3000/api/contacts', {
+      fetch(`${port}/api/contacts`, {
 
         headers: { 'Authorization': `Bearer ${token}` }
 
       }),
 
-      fetch('http://localhost:3000/api/allGroup', {
+      fetch(`${port}/api/allGroup`, {
 
         headers: { 'Authorization': `Bearer ${token}` }
 
@@ -130,7 +130,7 @@ export function listContact(combinedList) {
     // 1. LOGIKA PESAN
     const rawContent = item.lastMessage || '';
     const hasImageUrl = item.imageUrl && item.imageUrl !== 'null';
-    const isImageFormatLama = rawContent.includes('http://localhost:3000/uploads/');
+    const isImageFormatLama = rawContent.includes(`${port}/uploads/`);
     const isImageFormatBaru = item.messageType === 'image';
     
 
@@ -149,7 +149,7 @@ export function listContact(combinedList) {
                      String(pic).trim() !== '';
 
     const avatarInner = hasPhoto
-      ? `<img src="http://localhost:3000/uploads/profile/${pic}" 
+      ? `<img src="${port}/uploads/profile/${pic}" 
               alt="Foto" 
               class="contact-profile-photo" 
               onerror="this.parentElement.innerHTML='${item.name.charAt(0).toUpperCase()}';this.parentElement.classList.remove('contact-avatar--photo')"
@@ -227,7 +227,7 @@ export function listContact(combinedList) {
         throw new Error('ID kontak tidak valid');
       }
   
-      const response = await fetch('http://localhost:3000/api/conversations/start', {
+      const response = await fetch(`${port}/api/conversations/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

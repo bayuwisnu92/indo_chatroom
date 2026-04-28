@@ -1,6 +1,6 @@
 import {mapSearchUsers, listContact} from "./contacts.js";
 import {dataGlobal} from "./contacts.js"
-
+import { port } from "./port.js"
 export function initSearch(token) {
 const pencarian = document.getElementById("pencarian");
 
@@ -21,7 +21,7 @@ pencarian.addEventListener("input", async function () {
 
     try {
 
-      const res = await fetch(`http://localhost:3000/api/users/search?q=${keyword}`, {
+      const res = await fetch(`${port}/api/users/search?q=${keyword}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -59,7 +59,7 @@ export function carikontak(token){
   
     try {
         console.log("Mencari user:", query); // Debugging
-        const response = await fetch(`http://localhost:3000/api/usersgrup/search?username=${query}`, {
+        const response = await fetch(`${port}/api/usersgrup/search?username=${query}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -107,7 +107,7 @@ export async function submitAddMember(token) {
   }
 
   try {
-      const response = await fetch(`http://localhost:3000/api/grup/${groupId}/add-member`, {
+      const response = await fetch(`${port}/api/grup/${groupId}/add-member`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',

@@ -4,6 +4,8 @@ import { renderContent } from "./utils.js";
 import { showAlert, formatDate } from "./utils.js";
 import { loadAllChatList } from "./contacts.js";
 import { setActiveConversation } from "./state.js";
+import { playNotification } from "./notifikasi.js"
+import { port } from "./port.js"
 const token = localStorage.getItem('token')
 const urlParams = new URLSearchParams(window.location.search);
 const gambarprofile = urlParams.get('image');
@@ -27,7 +29,7 @@ if(conversationId){
   });
 }
   try {
-    const response = await fetch(`http://localhost:3000/api/${conversationId}/messages`, {
+    const response = await fetch(`${port}/api/${conversationId}/messages`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
@@ -54,8 +56,8 @@ menu.insertAdjacentHTML('beforeend', blokir);
 <div class="chat-header-content d-flex align-items-center" data-user-id="${lawanChat.user_id}">
 
   <div class="header-avatar-wrapper position-relative">
-    <img src="http://localhost:3000/uploads/profile/${gambarprofile}" 
-         onerror="this.src='http://localhost:3000/uploads/profile/none.png'" 
+    <img src="${port}/uploads/profile/${gambarprofile}" 
+         onerror="this.src='${port}/uploads/profile/none.png'" 
          alt="Foto" 
          class="header-profile-image" width='40' height='40'>
     <span class="status-indicator-dot ${statusnya}"></span>
@@ -86,7 +88,7 @@ messages.forEach(p => {
   if (p.messageType === 'image' && p.imageUrl) {
     bodyPesan = `
       <div class="chat-image-container">
-        <img src="http://localhost:3000/uploads/${p.imageUrl}" 
+        <img src="${port}/uploads/${p.imageUrl}" 
              alt="image" 
              class="chat-image img-fluid" 
              style="max-width: 200px; border-radius: 8px; cursor: pointer; display: block;"
@@ -151,7 +153,7 @@ messages.forEach(p => {
     }
     
     try {
-      const response = await fetch(`http://localhost:3000/api/grup/${grupId}/messages`, {
+      const response = await fetch(`${port}/api/grup/${grupId}/messages`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
   
@@ -214,8 +216,8 @@ if (tombollihatgrup) {
 } else {
   console.error('Waduh, tombolnya nggak ketemu! Cek lagi ID-nya di HTML.');
 }
-      const gambargrup =`<img src="http://localhost:3000/uploads/profile/${gambarprofile}" 
-           onerror="this.src='http://localhost:3000/uploads/profile/none.png'" 
+      const gambargrup =`<img src="${port}/uploads/profile/${gambarprofile}" 
+           onerror="this.src='${port}/uploads/profile/none.png'" 
            alt="Foto" 
            class="header-profile-image" width='40' height='40'>`
       console.log(`pengen tau ${lawanChat}`)
@@ -288,7 +290,7 @@ if (tombollihatgrup) {
             if (isImage) {
                 contentHtml = `
                     <div class="chat-image-wrap">
-                        <img src="http://localhost:3000/uploads/${p.imageUrl}" 
+                        <img src="${port}/uploads/${p.imageUrl}" 
                              class="img-fluid rounded shadow-sm" 
                              style="max-width: 200px; cursor: pointer;" 
                              onclick="window.open(this.src)">
@@ -431,7 +433,7 @@ if (tombollihatgrup) {
   
       try {
 
-        const response = await fetch(`http://localhost:3000/api/${conversationId}/send`, {
+        const response = await fetch(`${port}/api/${conversationId}/send`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -482,7 +484,7 @@ if(message){
     // Jika pesan mengandung image (dari socket biasanya membawa imageUrl atau messageType)
     if (message.messageType === 'image' || message.imageUrl) {
       bodyHtml = `
-        <img src="http://localhost:3000/uploads/${message.imageUrl}" 
+        <img src="${port}/uploads/${message.imageUrl}" 
              class="chat-image mb-2" 
              style="max-width: 200px; border-radius: 8px;">
         ${message.content ? `<span class=message-text>${renderContent(message.content)}</span>` : ''}
@@ -548,7 +550,7 @@ const tombolEdit = (isSent && message.messageType === 'text')
       }
 
     try {
-      const response = await fetch(`http://localhost:3000/api/grup/${grupId}/send`, {
+      const response = await fetch(`${port}/api/grup/${grupId}/send`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -570,8 +572,9 @@ const tombolEdit = (isSent && message.messageType === 'text')
 
 export function updateContactRealtime(message, currentUserId) {
   // Bunyi hanya kalau bukan pesan dari diri sendiri
+  console.log(`pengen tahu ${message.senderId}`)
 if (message.senderId !== currentUserId) {
-  playNotification();
+  playNotification(message.chat_ringtone);
 }
 console.log("senderId:", message.senderId);
 console.log("currentUserId:", currentUserId);
@@ -595,7 +598,7 @@ console.log("currentUserId:", currentUserId);
           // Jika ada teks caption, tampilkan. Jika tidak, tampilkan label Gambar
           textDisplay = message.content ? `📷 ${message.content}` : "📷 Gambar";
         } else {
-          textDisplay = message.content || "Pesan baru";
+          textDisplay = `${message.senderName}: ${message.content || message.message_text}` || "Pesan baru";
         }
   
         // Format tampilan untuk Grup (Nama Pengirim: Pesan)
@@ -605,9 +608,7 @@ console.log("currentUserId:", currentUserId);
   
         // Tandai pesan baru
         if (message.senderId != currentUserId) {
-          lastMsgElem.classList.add("new-message");
-          
-          
+          lastMsgElem.classList.add("new-message");        
         }
         
       }
@@ -620,13 +621,7 @@ console.log("currentUserId:", currentUserId);
       loadAllChatList();
     }
   }
-  const notificationSound = new Audio('../notifikasi/pesan.mp3');
-  function playNotification() {
-    notificationSound.currentTime = 0; // reset biar bisa bunyi cepat
-    notificationSound.play().catch(err => {
-      console.log('Audio gagal:', err);
-    });
-  }
+ 
 
   export async function deleteMessage(messageId) {
     
@@ -637,7 +632,7 @@ console.log("currentUserId:", currentUserId);
     if (!konfirmasi) return; // Kalau user batal, jangan lanjut
   
     try {
-      const response = await fetch(`http://localhost:3000/api/hapuspesan/${messageId}`, {
+      const response = await fetch(`${port}/api/hapuspesan/${messageId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -673,7 +668,7 @@ console.log("currentUserId:", currentUserId);
         return;
       }
   
-      const response = await fetch('http://localhost:3000/api/newGroup', {
+      const response = await fetch('${port}/api/newGroup', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -709,7 +704,7 @@ console.log("currentUserId:", currentUserId);
     container.innerHTML = '<div class="loading">Memuat anggota...</div>';
   
     try {
-      const response = await fetch(`http://localhost:3000/api/membergrup/${grupId}`, {
+      const response = await fetch(`${port}/api/membergrup/${grupId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -741,8 +736,8 @@ console.log("currentUserId:", currentUserId);
   
       members.forEach(member => {
         const profilePic = member.profile_picture
-          ? `http://localhost:3000/uploads/profile/${member.profile_picture}`
-          : 'http://localhost:3000/uploads/profile/none.png'; // ganti dengan path default avatar Anda
+          ? `${port}/uploads/profile/${member.profile_picture}`
+          : '${port}/uploads/profile/none.png'; // ganti dengan path default avatar Anda
   
         // Logika sederhana: jika selisih waktu kurang dari 5 menit, dianggap Online
         const isOnline = (new Date() - new Date(member.last_online)) < 5 * 60 * 1000;
@@ -804,7 +799,7 @@ console.log("currentUserId:", currentUserId);
     try {
       const chatBox = document.getElementById('messages');
 const grupId = chatBox.dataset.groupId;
-      const response = await fetch(`http://localhost:3000/api/delete/grup/${messageId}?groupId=${grupId}`, {
+      const response = await fetch(`${port}/api/delete/grup/${messageId}?groupId=${grupId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -825,7 +820,7 @@ const grupId = chatBox.dataset.groupId;
   async function editMessage(messageId) {
     try {
       // Ambil pesan lama
-      const resGet = await fetch(`http://localhost:3000/api/editpesan/${messageId}`, {
+      const resGet = await fetch(`${port}/api/editpesan/${messageId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -841,7 +836,7 @@ const grupId = chatBox.dataset.groupId;
       }
   
       // Kirim update ke server
-      const resUpdate = await fetch(`http://localhost:3000/api/updatepesan/${messageId}`, {
+      const resUpdate = await fetch(`${port}/api/updatepesan/${messageId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -868,7 +863,7 @@ const grupId = chatBox.dataset.groupId;
     try {
 
       // Ambil pesan lama
-      const resGet = await fetch(`http://localhost:3000/api/editpesangrup/${messageId}`, {
+      const resGet = await fetch(`${port}/api/editpesangrup/${messageId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -884,7 +879,7 @@ const grupId = chatBox.dataset.groupId;
       }
   
       // Kirim update ke server
-      const resUpdate = await fetch(`http://localhost:3000/api/updatepesangrup/${messageId}`, {
+      const resUpdate = await fetch(`${port}/api/updatepesangrup/${messageId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

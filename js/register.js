@@ -1,3 +1,4 @@
+import { port } from "./port.js"
 token = localStorage.getItem('token');
 
 if(token) {
@@ -31,7 +32,7 @@ form.addEventListener('submit', async (e) => {
             throw new Error('Password must be at least 3 characters');
         }
 
-        const response = await fetch('http://localhost:3000/auth/register', {
+        const response = await fetch(`${port}/auth/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

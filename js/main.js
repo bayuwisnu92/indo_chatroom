@@ -1,6 +1,6 @@
 import { formatDate, renderContent, showAlert ,showTypingIndicator, hideTypingIndicator}
 from "./utils.js";
-
+import { port } from "./port.js"
 import { verifyToken, decodeToken, logoutOnline }
 from "./auth.js";
 import { loadAllChatList, startChat } from "./contacts.js";
@@ -117,6 +117,8 @@ if(!token){
           onUpdateContact: (data) => {
               updateContactRealtime(data, currentUserId);
               
+
+
             },
 
             onUpdateGroupContact: (data) => {
@@ -331,7 +333,7 @@ function normalizeMessage(msg) {
       if (homeElement) {
         homeElement.textContent = `${username} (ID: ${userId})`;
         homeElement.innerHTML = `
-        <img src="http://localhost:3000/uploads/profile/${photo}" alt="Profile" class="rounded-circle me-2" style="width: 30px; height: 30px;">
+        <img src="${port}/uploads/profile/${photo}" alt="Profile" class="rounded-circle me-2" style="width: 30px; height: 30px;">
         ${username} (ID: ${userId})
       `;
       }
@@ -342,7 +344,7 @@ function normalizeMessage(msg) {
     
       document.getElementById('logout').addEventListener('click', async () => {
         try{
-          const response = await fetch('http://localhost:3000/api/logout', {
+          const response = await fetch(`${port}/api/logout`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,

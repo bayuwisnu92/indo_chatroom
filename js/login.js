@@ -1,3 +1,4 @@
+import { port } from "./port.js"
 const form = document.getElementById('formLogin');
 
 
@@ -9,7 +10,7 @@ form.addEventListener('submit', async (e) => {
         const email = form.querySelector('#email').value; // Ambil nilai email
         const password = form.querySelector('#password').value; // Ambil nilai password
 
-        const response = await fetch('http://localhost:3000/auth/login', {
+        const response = await fetch(`${port}/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json' // << PENTING!

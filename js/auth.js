@@ -1,5 +1,7 @@
+
+import { port } from "./port.js"
 export async function verifyToken(token) {
-    const response = await fetch('http://localhost:3000/api/verify-token', {
+    const response = await fetch(`${port}/api/verify-token`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -27,7 +29,7 @@ export async function verifyToken(token) {
   
   export async function logoutOnline(token) {
     try {
-      const response = await fetch('http://localhost:3000/api/logout', {
+      const response = await fetch(`${port}/api/logout`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

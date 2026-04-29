@@ -414,15 +414,11 @@
   
   @media (max-width: 767px) {
     .w-md-40, .w-md-60 { width: 100%; }
-    .chat-form #message-input{
-      width: 300px;
-    }
+    
   }
   @media (max-width: 900px) {
     .w-md-40, .w-md-60 { width: 100%; }
-    .chat-form #message-input{
-      width: 300px;
-    }
+    
   }
   
   @media (max-width: 576px) {

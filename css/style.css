@@ -18,10 +18,10 @@
      2. CHAT CONTAINER & HEADER
      ========================================================================== */
   .chat-container {
-    height: 80vh;
+    height: 90vh;
     display: flex;
     flex-direction: column;
-    background-color: white;
+    background-color: rgb(255, 255, 255);
     border-radius: 20px !important;
   }
   
@@ -96,6 +96,24 @@
   .chat-form label,
 .chat-form button {
     flex-shrink: 0;
+}
+
+.chat-form{
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
+  background-color: #f8f9fc;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: end;
+  align-items: center;
+}
+
+.chat-form #message-input{
+  width: 400px;
+  height: fit-content;
 }
   
   .message.sent .message-bubble {
@@ -412,6 +430,15 @@
   
   @media (max-width: 767px) {
     .w-md-40, .w-md-60 { width: 100%; }
+    .chat-form #message-input{
+      width: 300px;
+    }
+  }
+  @media (max-width: 900px) {
+    .w-md-40, .w-md-60 { width: 100%; }
+    .chat-form #message-input{
+      width: 300px;
+    }
   }
   
   @media (max-width: 576px) {

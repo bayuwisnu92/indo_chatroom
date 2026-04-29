@@ -11,6 +11,11 @@ import { initSocket } from "./socket.js";
 import { initSearch, carikontak, submitAddMember } from "./search.js";
 import { loadMessages, loadMessagesGrup, appendMessage, updateContactRealtime, initChatHandlers, buatgrup, removeMessageFromUI, renderStatus } from "./chat.js";
 import { updateProfile, updateprofilegrup } from "./profile.js";
+import { unlockAudio } from "./notifikasi.js";
+
+document.addEventListener("click", () => {
+   unlockAudio();
+}, { once:true });
 
 // const notificationSound = new Audio('../notifikasi/Jejak_Cinta_Abadi.mp3');
 // function playNotification() {

@@ -88,6 +88,11 @@
     font-size: 0.95rem;
     position: relative;
   }
+
+  .chat-form label,
+.chat-form button {
+    flex-shrink: 0;
+}
   
   .message.sent .message-bubble {
     background-color: var(--bubble-sent);

@@ -16,7 +16,7 @@ export function unlockAudio() {
 export function playNotification(chat_ringtone) {
   if (!chat_ringtone) return;
 
-  const path = `./notifikasi/${chat_ringtone}`;
+  const path = `/indo_chatroom/notifikasi/${chat_ringtone}`;
 
   // pakai cache
   if (!audioCache[path]) {

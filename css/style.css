@@ -98,23 +98,7 @@
     flex-shrink: 0;
 }
 
-.chat-form{
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 10px;
-  background-color: #f8f9fc;
-  border-top: 1px solid #e9ecef;
-  display: flex;
-  justify-content: end;
-  align-items: center;
-}
 
-.chat-form #message-input{
-  width: 400px;
-  height: fit-content;
-}
   
   .message.sent .message-bubble {
     background-color: var(--bubble-sent);

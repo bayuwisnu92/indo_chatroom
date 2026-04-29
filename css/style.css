@@ -88,6 +88,10 @@
     font-size: 0.95rem;
     position: relative;
   }
+  button[type="submit"]{
+    position: relative;
+    z-index: 9999;
+ }
 
   .chat-form label,
 .chat-form button {
